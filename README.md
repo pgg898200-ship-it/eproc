@@ -2,7 +2,7 @@
 
 **Decide when to stop a live evaluation.**
 
-Put eproc between your evaluator and the scheduler that requests the next sample. It reads a stream of bounded scores, updates an e-value after each score, and signals when the evidence crosses your chosen threshold. Use the Python library inside an evaluation loop, pipe scores to the CLI, or call the same C11 engine from WebAssembly.
+Put eproc between your evaluator and the scheduler that requests the next sample. It reads a stream of bounded scores, updates an e-value after each score, and signals when the e-value reaches the threshold set by your error level. Use the Python library inside an evaluation loop, pipe scores to the CLI, or call the same C11 engine from WebAssembly.
 
 [Try the browser lab](https://pgg898200-ship-it.github.io/eproc/) · [Install the Python wheel](#install) · [Agent API guide](llms.txt)
 
