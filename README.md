@@ -1,96 +1,61 @@
 # eproc
 
-[![CI](https://github.com/pgg898200-ship-it/eproc/actions/workflows/ci.yml/badge.svg)](https://github.com/pgg898200-ship-it/eproc/actions/workflows/ci.yml)
-[![Live WASM Lab](https://img.shields.io/badge/Live_WASM_Lab-72_KiB_C11-2563eb)](https://pgg898200-ship-it.github.io/eproc/)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-green.svg)](LICENSE)
-[![Zero Dependencies](https://img.shields.io/badge/Runtime_Deps-0-brightgreen)](#install-zero-runtime-dependencies)
+**Decide when to stop a live evaluation.**
 
-**Check a model evaluation after each result.** Feed pass/fail scores from your evaluator into `EvalGate`. When the evidence crosses your threshold, your runner can stop requesting more evaluations. The same C11 library also provides online calibration, agent racing and evidence fusion.
+Put eproc between your evaluator and the scheduler that requests the next sample. It reads a stream of bounded scores, updates an e-value after each score, and signals when the evidence crosses your chosen threshold. Use the Python library inside an evaluation loop, pipe scores to the CLI, or call the same C11 engine from WebAssembly.
 
-[Try the browser lab](https://pgg898200-ship-it.github.io/eproc/) · [Explore the interfaces](#install-zero-runtime-dependencies) · [Compare benchmarks](docs/COMPARISON.md)
+[Try the browser lab](https://pgg898200-ship-it.github.io/eproc/) · [Install the Python wheel](#install) · [Agent API guide](llms.txt)
 
-## Stop a pass/fail evaluation
+![E-value across the quickstart score stream. It first rises above the threshold of 20 at observation 41.](docs/evidence-trace.svg)
 
-With Python 3.10+, Git and a C11 compiler, install the tagged source release.
+## Run a stopping rule
 
-```sh
-python -m pip install "git+https://github.com/pgg898200-ship-it/eproc.git@v0.1.0"
-```
-
-Start with 60 synthetic results. A pass scores 1 and a failure scores 0. The one-sided gate tests a pass probability of at most 50% at a 5% significance level.
+The example uses a fixed trace so you can check your installation. For real evaluations, set the score bounds, null threshold, direction and error level before observing the scores.
 
 ```python
 from eproc import EvalGate
 
-scores = [1, 1, 0, 1, 1] * 12
-gate = EvalGate(mu0=0.50, alpha=0.05)
-for score in scores:
+gate = EvalGate(mu0=0.50, alpha=0.05, lower=0, upper=1, side="upper")
+for score in [1, 1, 0, 1] * 12:
     gate.observe(score)
     if gate.should_stop:
         break
 
 result = gate.summary()
-print(f"{result.verdict} after {result.n} results (e-value {result.e_value:.2f})")
+print(result.verdict, result.n, round(result.e_value, 2))
+# REJECT 41 20.52
 ```
 
-```text
-REJECT after 27 results (e-value 28.87)
+Here the null hypothesis says that at every step the next score has conditional mean at most 0.50 given the history. Under this null and the stated score bounds, the probability that the e-value ever reaches 20 is at most 5%. Crossing rejects that null. If the run ends below threshold without an earlier crossing, the evidence is inconclusive. [Mathematical assumptions](docs/MATHEMATICS.md) · [Betting on bounded observations](https://arxiv.org/abs/2010.09686)
+
+## Where it fits
+
+| Your application | Input | eproc returns |
+|---|---|---|
+| LLM evaluations and CI | One bounded score per example, or candidate and baseline scores on the same prompt | A stopping decision from `EvalGate` or `PairedEvalGate` |
+| Model selection | An arm ID and reward after each trial | Active arms and a winner when `AgentRace` separates their confidence bounds |
+| Forecast monitoring | Residuals as labels arrive | Nested interval radii from `MultiRateConformal`, plus a mergeable 640-byte residual histogram with `ConformalMonoid` |
+| Multiple forecasters or evidence feeds | Expert predictions and labels, or contributions tagged with provenance IDs | An updated forecast from `SafeFuser`, or a pooled belief from `EchoPool` |
+
+In the repository’s simulation with a pass probability of 0.65 against a null of 0.50, the gate stopped after a median of 88 observations. The fixed-horizon reference used 857 observations and was sized for a smaller effect of 0.05. The benchmark counts evaluation calls. Token cost depends on what each call runs. [Benchmark conditions and measurements](benchmarks/BENCHMARKS.md)
+
+## Install
+
+### Python
+
+Use the release wheel that matches your interpreter and platform. This installs the published 0.1.0 build directly from GitHub.
+
+```sh
+python -m pip install --no-index --only-binary=:all: --find-links https://github.com/pgg898200-ship-it/eproc/releases/expanded_assets/v0.1.0 eproc==0.1.0
 ```
 
-On this sequence, the e-value first crosses 20 (1 / 0.05) on result 27. `REJECT` refers to the 50% null hypothesis. An evaluation that reaches its budget before crossing reports `CONTINUE`.
+If your platform has no matching wheel, build from the tagged source with a C compiler and Python development headers.
 
-## Benchmark snapshots
-
-```text
-Continuous peeking false-positive rate (2,000 nulls, T=1,000, nominal alpha=0.05)
-  Student-t peeked every tick |███████████████████████████████████████░| 39.2%  (broken)
-  eproc.EProcess (ONS bet)    |████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░|  3.9%  (exact <= 5%)
-
-Eval calls to certify +0.15 uplift vs fixed-horizon N=857 (100% power)
-  Fixed-horizon plan          |████████████████████████████████████████|  857 calls
-  eproc.EProcess early stop   |████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░|   88 calls (9.74x faster, 88.7% saved)
-
-8-agent swarm MSE under 1e6 Byzantine attack + regime shift (docs/COMPARISON.md)
-  Naive 8-agent mean          |████████████████████████████████████████| 15.62B  (destroyed)
-  Anchor baseline             |█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░| 0.1926
-  Coordinate-wise median      |░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░| 0.0305
-  eproc.SafeFuser (BOA+Ville) |░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░| 0.0156  (-91.9% vs anchor, -48.8% vs median)
+```sh
+python -m pip install "eproc @ git+https://github.com/pgg898200-ship-it/eproc.git@v0.1.0"
 ```
 
----
-
-## Why `eproc`
-
-Live multi-agent systems, online LLM evaluators, model routers, and streaming ML pipelines break classical fixed-horizon statistics in four ways:
-
-1. **Continuous peeking breaks p-values:** Checking a t-test/z-test on live LLM evals or rollouts inflates a 5% test to **39.2% false positives** (`N=2,000` live Monte Carlo). Waiting for fixed horizons wastes **56%–89% of tokens**.
-2. **Distribution shift & delayed labels break static conformal intervals:** Existing Python/R libraries (`online_conformal` archived 2025, `MAPIE`, `confseq`, `conformalForecast`) run pure-Python loops (`14–87 µs`/step), suffer **20.8% quantile-crossing ticks** across independent rates, and cannot merge calibration state across distributed fleets.
-3. **Multi-agent swarms collapse under echoes and outliers:** Naive voting double-counts reprinted evidence, fails to down-weight sycophantic/unreliable peers, and explodes under a single poisoned agent.
-4. **Firehose monitoring drowns in loud distractors:** Ranking raw channel means wastes 96% of attention on high-variance channels while missing quiet true anomalies.
-
-`eproc` solves all four in **one auditable, zero-allocation C11 engine** (`0` calls to `malloc`/`free` in `libeproc.so`, **runtime CPUID AVX2 dispatch** inside portable wheels, **0.88 ms** Python cold import, **3-way 0-ULP bit-identity** across native AVX2, portable runtime-AVX2, and pure scalar/WASM).
-
-See [`docs/COMPARISON.md`](docs/COMPARISON.md) for a fair head-to-head benchmark & capability matrix against `confseq`, `MAPIE`, `online_conformal`, `scipy.stats`, and `statsmodels`.
-
----
-
-## Install (Zero Runtime Dependencies)
-
-### Python (3.10–3.14, portable wheels with automatic runtime AVX2)
-
-```bash
-# Build from the tagged source release:
-python -m pip install "git+https://github.com/pgg898200-ship-it/eproc.git@v0.1.0"
-# Or grab a prebuilt wheel directly from Releases:
-# https://github.com/pgg898200-ship-it/eproc/releases/tag/v0.1.0
-# (And `pip install eproc` once PyPI OIDC Trusted Publishing is enabled)
-
-# Or build from source:
-git clone https://github.com/pgg898200-ship-it/eproc.git
-cd eproc
-pip install .                           # portable wheel (auto-dispatches AVX2 on x86_64 via CPUID)
-EPROC_NATIVE_ARCH=1 pip install .       # host-tuned -march=native build
-```
+[All release assets](https://github.com/pgg898200-ship-it/eproc/releases/tag/v0.1.0)
 
 ### Single-Header C11 / C++17 (1 file) or CMake `FetchContent`
 
@@ -135,11 +100,11 @@ Drop-in manifests included for:
 
 ---
 
-## 30-Second Quickstarts
+## Integration examples
 
 ### 1. Paired evaluations, CI assertions and agent racing
 
-For a single score stream, run the [pass/fail evaluation](#stop-a-passfail-evaluation). To compare two models on the same prompts, pass their scores in pairs. `span=1.0` bounds the absolute difference between scores in [0, 1].
+For a single score stream, run the [pass/fail evaluation](#run-a-stopping-rule). To compare two models on the same prompts, pass their scores in pairs. `span=1.0` bounds the absolute difference between scores in [0, 1].
 
 ```python
 from eproc import PairedEvalGate, assert_eprocess_uplift
@@ -149,7 +114,7 @@ paired.observe_pair(candidate_score=0.92, baseline_score=0.71)
 print(paired.summary().verdict)  # CONTINUE
 
 # In CI, raise AssertionError if these scores never cross the threshold.
-scores = [1, 1, 0, 1, 1] * 12
+scores = [1, 1, 0, 1] * 12
 assert_eprocess_uplift(scores, mu0=0.50, alpha=0.05)
 ```
 
@@ -162,7 +127,7 @@ from eproc import MultiRateConformal, ConformalWrapper, ConformalMonoid, fleet_c
 
 # Calibrate 50/80/90/95/99% intervals simultaneously in 353 ns/step (0 quantile crossings)
 cp = MultiRateConformal(alphas=(0.50, 0.20, 0.10, 0.05, 0.01), window_size=128, pid_ki=0.05)
-pred = cp.predict(10.0, scale=1.0)       # pred.lows, pred.highs, pred.radii (strictly nested)
+pred = cp.predict(10.0, scale=1.0)       # pred.lows, pred.highs, pred.radii (nested)
 cp.update(abs(y_true - 10.0))
 
 # Drop-in sklearn / MAPIE-style online conformal wrapper around any regressor
@@ -174,7 +139,7 @@ cal = fleet_calibrate([scores_agent_a, scores_agent_b, scores_agent_c], quantile
 wire_640b = cal.global_monoid.to_bytes() # fixed 640 bytes regardless of N scores
 ```
 
-### 3. Byzantine-Safe Multi-Agent Fusion & Echo-Deduplicated Belief Pooling
+### 3. Combine expert forecasts and deduplicate evidence
 
 ```python
 from eproc import SafeFuser, EchoPool
@@ -237,8 +202,8 @@ All numbers measured live on `Intel(R) Xeon(R) CPU @ 2.30GHz` (2 cores, AVX2+FMA
 
 | Benchmark | Incumbent / Naive Control | **`eproc`** | Verified Margin |
 |---|---|---|---|
-| **B1a: Continuous Peeking Null Safety (`N=2,000, T=1,000`)** | Student-t peeked every tick: **39.20% FPR** | **3.90% FPR** (Beta skewed: **4.00%**) | **10.1× fewer false positives** (strictly `<= 5%`) |
-| **B1b: Early Stopping (`+0.15` uplift vs `N=857` fixed)** | `857` calls (0% saved) | **88 median calls** (`100%` power) | **9.74× faster** (**88.7% tokens saved**) |
+| **B1a: Continuous Peeking Null Safety (`N=2,000, T=1,000`)** | Student-t peeked every tick: **39.20% FPR** | **3.90% FPR** (Beta skewed: **4.00%**) | **10.1× fewer observed false positives** |
+| **B1b: Early Stopping (`+0.15` uplift vs `N=857` fixed)** | `857` calls (0% saved) | **88 median calls**, rejection in all simulated trials | **9.74× fewer calls at the median** (**88.7% fewer calls on average**) |
 | **B1c: `K=8` Agent Tournament (`100` runs)** | `6,400` calls fixed | **3,994 median calls**, **0.00% null FWER** | **1.60× faster** (**36.1% mean saved**) |
 | **B3: 1,024-Agent Fleet Conformal (`512k` scores)** | `4.10 MB` raw, `11.85 ms` merge | **640 B**, **0.52 ms** Py / **62.2 µs** C11, **0 bin drift** | **6,400× smaller wire**, **190× faster C11** |
 | **B4a: 8-Agent `1e6` Byzantine + Regime Shift** | Naive mean `10.42B`; Anchor `0.195` | Attack **`0.0220`**, post-shift **`0.0284`** | **-88.7% vs anchor** (`-85.0%` post-shift) |
