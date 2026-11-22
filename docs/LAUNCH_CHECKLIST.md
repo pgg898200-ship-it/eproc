@@ -4,25 +4,24 @@ This checklist follows a transparent, engineering-first release model: zero astr
 
 ---
 
-## 1. Repository Setup (Standalone Neutral Account or Org)
+## 1. Repository Setup
 
-1. Create a public GitHub repository named `eproc` under your chosen public handle or neutral organization (e.g., `Lucagon/eproc` or `eproc-dev/eproc`).
-   - If you use an organization name other than `Lucagon`, update the repository URLs in `pyproject.toml`, `README.md`, and `docs/index.html` before tagging.
-2. Push this repository's `main` branch from a clean, authenticated workstation (using SSH key or GitHub CLI token — never raw passwords):
+1. Target public repository: `https://github.com/pgg898200-ship-it/eproc`.
+2. Push `main` using a repository-scoped SSH Deploy Key (or authenticated CLI):
    ```bash
-   git remote add origin git@github.com:Lucagon/eproc.git
+   git remote add origin git@github.com:pgg898200-ship-it/eproc.git
    git push -u origin main
    ```
 3. Set GitHub repository metadata for organic discovery:
    - **Description:** `Sub-microsecond anytime-valid statistics, multi-rate online conformal calibration, and Byzantine-safe multi-agent fusion (zero-dep C11/AVX2 + Python + C++17 + MCP).`
-   - **Website:** `https://lucagon.github.io/eproc/`
+   - **Website:** `https://pgg898200-ship-it.github.io/eproc/`
    - **Topics:** `e-values`, `anytime-valid`, `conformal-prediction`, `sequential-testing`, `multi-agent`, `byzantine-fault-tolerance`, `mcp-server`, `c11`, `avx2`, `statistics`, `llm-evaluation`
 4. Enable GitHub Pages: **Settings → Pages → Source: GitHub Actions**.
    - Pushing to `main` runs `.github/workflows/pages.yml`, automatically publishing:
-     - Interactive browser lab: `https://lucagon.github.io/eproc/`
-     - Agent-optimized Markdown: `https://lucagon.github.io/eproc/llms.txt` and `/llms-full.txt`
-     - Single-header direct download: `https://lucagon.github.io/eproc/eproc_single.h`
-     - Integrity checksums: `https://lucagon.github.io/eproc/SHA256SUMS`
+     - Interactive browser lab: `https://pgg898200-ship-it.github.io/eproc/`
+     - Agent-optimized Markdown: `https://pgg898200-ship-it.github.io/eproc/llms.txt` and `/llms-full.txt`
+     - Single-header direct download: `https://pgg898200-ship-it.github.io/eproc/eproc_single.h`
+     - Integrity checksums: `https://pgg898200-ship-it.github.io/eproc/SHA256SUMS`
 
 ---
 
@@ -30,7 +29,7 @@ This checklist follows a transparent, engineering-first release model: zero astr
 
 1. Create a PyPI account (with 2FA/passkey) and register a **Pending Publisher** at `https://pypi.org/manage/account/publishing/`:
    - **PyPI Project Name:** `eproc`
-   - **Owner:** `Lucagon` (or your org)
+   - **Owner:** `pgg898200-ship-it`
    - **Repository:** `eproc`
    - **Workflow name:** `release.yml`
    - **Environment name:** `pypi`
@@ -72,7 +71,7 @@ Submit concise, factual entries with reproducible commands — never promotional
    - Lead with the verifiable falsifiable claim and 1-command reproduction:
      - *Title:* `Show HN: eproc – Sub-microsecond anytime-valid statistics, online conformal & Byzantine-safe agent fusion (zero-dep C11/Python/MCP)`
      - *Core hook:* Continuous peeking breaks 5% t-tests (`39.2%` FPR); `eproc` enforces Ville's inequality (`3.9%` FPR), cuts eval tokens `88.7%` (`9.74×` faster stop), calibrates 5 crossing-free conformal rates in `316 ns` (`273×` vs pure Python), and merges 1,024-agent calibration state in `640 bytes/agent` (`2,162×` faster LOO).
-     - Link directly to the interactive browser lab (`https://lucagon.github.io/eproc/`), `benchmarks/BENCHMARKS.md`, and `BREAKER_REPORT.md` (42/42 adversarial tests + ASan/UBSan/TSan receipts).
+     - Link directly to the interactive browser lab (`https://pgg898200-ship-it.github.io/eproc/`), `benchmarks/BENCHMARKS.md`, and `BREAKER_REPORT.md` (42/42 adversarial tests + ASan/UBSan/TSan receipts).
 3. **Post-Launch Maintainer Cadence:**
    - Respond rapidly to issues/PRs with deterministic tests and updated receipts.
    - Keep `SHA256SUMS` and `benchmarks/receipts.json` reproducible via `python3 benchmarks/bench_suite.py` on every release.

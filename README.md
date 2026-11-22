@@ -43,7 +43,7 @@ Live multi-agent systems, online evaluators, model routers, and streaming ML pip
 pip install eproc
 
 # Or build directly from source (compiles self-contained C11 _native wheel):
-git clone https://github.com/Lucagon/eproc.git
+git clone https://github.com/pgg898200-ship-it/eproc.git
 cd eproc
 pip install .                           # portable C11 build
 EPROC_NATIVE_ARCH=1 pip install .       # host-tuned AVX2/FMA/NEON build
@@ -219,7 +219,7 @@ python3 scripts/verify_release_hygiene.py --strict
 
 ## Documentation & Agent Discovery
 
-- **[Interactive Browser Lab & Benchmarks](https://lucagon.github.io/eproc/)** ([`docs/index.html`](docs/index.html)) — Zero-CDN live peeking simulator, verified `[LIVE-CPU]` speedup explorer, and Byzantine/echo swarm lab.
+- **[Interactive Browser Lab & Benchmarks](https://pgg898200-ship-it.github.io/eproc/)** ([`docs/index.html`](docs/index.html)) — Zero-CDN live peeking simulator, verified `[LIVE-CPU]` speedup explorer, and Byzantine/echo swarm lab.
 - [`docs/MATHEMATICS.md`](docs/MATHEMATICS.md) — Exact theorems, martingale proofs, and literature citations.
 - [`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md) & [`benchmarks/receipts.json`](benchmarks/receipts.json) — Reproducible live benchmark report and raw JSON receipts.
 - [`BREAKER_REPORT.md`](BREAKER_REPORT.md) — Adversarial red-team audit and full Cycle-3 resolution log.

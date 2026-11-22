@@ -39,10 +39,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Lucagon/eproc"
-Repository = "https://github.com/Lucagon/eproc"
-Documentation = "https://lucagon.github.io/eproc/"
-Issues = "https://github.com/Lucagon/eproc/issues"
+Homepage = "https://github.com/pgg898200-ship-it/eproc"
+Repository = "https://github.com/pgg898200-ship-it/eproc"
+Documentation = "https://pgg898200-ship-it.github.io/eproc/"
+Issues = "https://github.com/pgg898200-ship-it/eproc/issues"
 
 [project.scripts]
 eproc = "eproc.cli:main"
