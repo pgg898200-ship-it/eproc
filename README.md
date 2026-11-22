@@ -5,11 +5,41 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-green.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/Runtime_Deps-0-brightgreen)](#install-zero-runtime-dependencies)
 
-**Sub-microsecond anytime-valid statistics, crossing-free online conformal calibration, 640-byte abelian fleet monoids, and Byzantine-safe multi-agent fusion.**
-Zero runtime dependencies across **Python (C-API + runtime AVX2)**, **C11/C++17 single-header + CMake**, **WebAssembly/JS/TS (72 KiB)**, **Rust**, **Go**, **CLI**, and **MCP 2026-07-28 + Agent Skill**.
+**Check a model evaluation after each result.** Feed pass/fail scores from your evaluator into `EvalGate`. When the evidence crosses your threshold, your runner can stop requesting more evaluations. The same C11 library also provides online calibration, agent racing and evidence fusion.
 
-> **Stop peeking blindly. Stop burning 80% of eval tokens. Stop letting one poisoned or echoing agent wreck your swarm.**
-> **Try it in your browser right now (real 72 KiB C11 WebAssembly, 0 server calls): [pgg898200-ship-it.github.io/eproc](https://pgg898200-ship-it.github.io/eproc/)**
+[Try the browser lab](https://pgg898200-ship-it.github.io/eproc/) · [Explore the interfaces](#install-zero-runtime-dependencies) · [Compare benchmarks](docs/COMPARISON.md)
+
+## Stop a pass/fail evaluation
+
+With Python 3.10+, Git and a C11 compiler, install the tagged source release.
+
+```sh
+python -m pip install "git+https://github.com/pgg898200-ship-it/eproc.git@v0.1.0"
+```
+
+Start with 60 synthetic results. A pass scores 1 and a failure scores 0. The one-sided gate tests a pass probability of at most 50% at a 5% significance level.
+
+```python
+from eproc import EvalGate
+
+scores = [1, 1, 0, 1, 1] * 12
+gate = EvalGate(mu0=0.50, alpha=0.05)
+for score in scores:
+    gate.observe(score)
+    if gate.should_stop:
+        break
+
+result = gate.summary()
+print(f"{result.verdict} after {result.n} results (e-value {result.e_value:.2f})")
+```
+
+```text
+REJECT after 27 results (e-value 28.87)
+```
+
+On this sequence, the e-value first crosses 20 (1 / 0.05) on result 27. `REJECT` refers to the 50% null hypothesis. An evaluation that reaches its budget before crossing reports `CONTINUE`.
+
+## Benchmark snapshots
 
 ```text
 Continuous peeking false-positive rate (2,000 nulls, T=1,000, nominal alpha=0.05)
@@ -49,8 +79,8 @@ See [`docs/COMPARISON.md`](docs/COMPARISON.md) for a fair head-to-head benchmark
 ### Python (3.10–3.14, portable wheels with automatic runtime AVX2)
 
 ```bash
-# Install directly from GitHub Release v0.1.0 (prebuilt wheels for Linux x86_64/aarch64 & macOS arm64/x86_64):
-pip install "eproc @ git+https://github.com/pgg898200-ship-it/eproc.git@v0.1.0"
+# Build from the tagged source release:
+python -m pip install "git+https://github.com/pgg898200-ship-it/eproc.git@v0.1.0"
 # Or grab a prebuilt wheel directly from Releases:
 # https://github.com/pgg898200-ship-it/eproc/releases/tag/v0.1.0
 # (And `pip install eproc` once PyPI OIDC Trusted Publishing is enabled)
@@ -107,32 +137,23 @@ Drop-in manifests included for:
 
 ## 30-Second Quickstarts
 
-### 1. Drop-In LLM Eval Gates, CI Assertions & Multi-Agent Racing
+### 1. Paired evaluations, CI assertions and agent racing
+
+For a single score stream, run the [pass/fail evaluation](#stop-a-passfail-evaluation). To compare two models on the same prompts, pass their scores in pairs. `span=1.0` bounds the absolute difference between scores in [0, 1].
 
 ```python
-from eproc import EvalGate, PairedEvalGate, AgentRace, assert_eprocess_uplift
+from eproc import PairedEvalGate, assert_eprocess_uplift
 
-# Drop-in single-stream eval gate with exact early-stop savings vs fixed N=857
-gate = EvalGate(mu0=0.50, alpha=0.05, lower=0.0, upper=1.0, fixed_horizon_n=857)
-for score in live_eval_stream:
-    gate.observe(score)
-    if gate.should_stop:
-        print(gate.summary())  # verdict="REJECT", n, e_value, p_value, samples_saved_pct
-        break
+paired = PairedEvalGate(alpha=0.05, span=1.0)
+paired.observe_pair(candidate_score=0.92, baseline_score=0.71)
+print(paired.summary().verdict)  # CONTINUE
 
-# Drop-in paired A/B LLM eval gate (candidate vs baseline on identical prompts)
-ab = PairedEvalGate(alpha=0.05, lower=0.0, upper=1.0)
-ab.observe_pair(candidate=0.92, baseline=0.71)
-
-# One-line pytest / CI statistical assertion (never flakes from peeking)
+# In CI, raise AssertionError if these scores never cross the threshold.
+scores = [1, 1, 0, 1, 1] * 12
 assert_eprocess_uplift(scores, mu0=0.50, alpha=0.05)
-
-# Race K=8 agents/prompts with automatic early elimination & FWER <= 0.05
-race = AgentRace(n_arms=8, alpha=0.05, lower=0.0, upper=1.0)
-while race.winner is None:
-    arm = race.suggest_arm()
-    race.update(arm, run_agent_task(arm))
 ```
+
+[Run the eight-agent tournament](examples/multi_agent_eval_demo.py) to see how `AgentRace` assigns the next evaluation and eliminates arms.
 
 ### 2. Crossing-Free Online Conformal, `sklearn` Wrapper & 640-Byte Fleet Monoid
 
