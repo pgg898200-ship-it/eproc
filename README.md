@@ -102,34 +102,23 @@ Drop-in manifests included for:
 
 ## Integration examples
 
-### 1. Drop-In LLM Eval Gates, CI Assertions & Multi-Agent Racing
+### 1. Paired evaluations, CI assertions and agent racing
+
+For a single score stream, run the [pass/fail evaluation](#run-a-stopping-rule). To compare two models on the same prompts, pass their scores in pairs. `span=1.0` bounds the absolute difference between scores in [0, 1].
 
 ```python
-from eproc import EvalGate, PairedEvalGate, AgentRace, assert_eprocess_uplift
+from eproc import PairedEvalGate, assert_eprocess_uplift
 
-# Track consumed samples against a fixed budget of 857
-gate = EvalGate(mu0=0.50, alpha=0.05, lower=0.0, upper=1.0, fixed_horizon_n=857)
-for score in live_eval_stream:
-    gate.observe(score)
-    if gate.should_stop:
-        print(gate.summary())  # verdict="REJECT", n, e_value, p_value, samples_saved_pct
-        break
+paired = PairedEvalGate(alpha=0.05, span=1.0)
+paired.observe_pair(candidate_score=0.92, baseline_score=0.71)
+print(paired.summary().verdict)  # CONTINUE
 
-# Drop-in paired A/B LLM eval gate (candidate vs baseline on identical prompts)
-ab = PairedEvalGate(alpha=0.05, lower=0.0, upper=1.0)
-ab.observe_pair(candidate=0.92, baseline=0.71)
-
-# Test the predeclared upper-tail null in a pytest or CI run
+# In CI, raise AssertionError if these scores never cross the threshold.
+scores = [1, 1, 0, 1] * 12
 assert_eprocess_uplift(scores, mu0=0.50, alpha=0.05)
-
-# Compare eight arms with bounded rewards and a fixed conditional mean per arm
-race = AgentRace(n_arms=8, alpha=0.05, lower=0.0, upper=1.0)
-for _ in range(6400):  # example evaluation budget
-    if race.winner is not None:
-        break
-    arm = race.suggest_arm()
-    race.update(arm, run_agent_task(arm))
 ```
+
+[Run the eight-agent tournament](examples/multi_agent_eval_demo.py) to see how `AgentRace` assigns the next evaluation and eliminates arms.
 
 ### 2. Crossing-Free Online Conformal, `sklearn` Wrapper & 640-Byte Fleet Monoid
 
