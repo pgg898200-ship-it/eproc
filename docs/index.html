@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eproc — Sub-Microsecond Anytime-Valid Statistics, Online Conformal &amp; Byzantine-Safe Multi-Agent Fusion</title>
+  <meta name="description" content="Zero-dependency C11/AVX2 + Python C-API + Single-Header C/C++17 + CLI + MCP 2026-07-28 engine for anytime-valid e-processes, crossing-free online conformal calibration, 640-byte abelian fleet monoids, and Byzantine-safe multi-agent fusion." />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f7f8fa;
+      --surface-2: #eef1f5;
+      --fg: #111827;
+      --muted: #4b5563;
+      --border: #d8dee6;
+      --accent: #2563eb;
+      --accent-fg: #ffffff;
+      --ok: #15803d;
+      --warn: #b45309;
+      --err: #dc2626;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b0f14;
+        --surface: #121821;
+        --surface-2: #192230;
+        --fg: #e5e7eb;
+        --muted: #9ca3af;
+        --border: #263244;
+        --accent: #3b82f6;
+        --accent-fg: #ffffff;
+        --ok: #22c55e;
+        --warn: #f59e0b;
+        --err: #ef4444;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 16px 48px;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1020px; margin: 0 auto; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre { font-family: var(--mono); }
+    header {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
+      gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
+    }
+    .title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    h1 { margin: 0; font-size: 1.5rem; letter-spacing: -0.02em; }
+    .badge {
+      font-family: var(--mono); font-size: 0.72rem; padding: 2px 9px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--surface); color: var(--muted);
+    }
+    .badge.ok { color: var(--ok); }
+    .subtitle { margin: 6px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 640px; }
+    .links { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.8rem; font-family: var(--mono); }
+    .kpis { display: flex; gap: 8px; flex-wrap: wrap; }
+    .kpi {
+      padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--surface); font-family: var(--mono); min-width: 106px;
+    }
+    .kpi-label { font-size: 0.7rem; color: var(--muted); }
+    .kpi-val { font-size: 0.95rem; font-weight: 700; margin-top: 2px; }
+    .kpi-val.accent { color: var(--accent); }
+    .install-bar {
+      margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;
+    }
+    .cmd-box {
+      padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
+      display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.78rem;
+    }
+    .cmd-label { font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 2px; }
+    .copy-btn {
+      font-family: var(--mono); font-size: 0.72rem; padding: 4px 8px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--fg); cursor: pointer;
+    }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tabs {
+      display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 16px; padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      font-family: var(--sans); font-size: 0.8rem; font-weight: 600; padding: 7px 12px;
+      border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+      color: var(--fg); cursor: pointer;
+    }
+    .tab-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .card {
+      padding: 16px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--surface); margin-bottom: 14px;
+    }
+    .controls {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+      gap: 12px; margin-bottom: 14px; font-size: 0.8rem;
+    }
+    .ctrl-group { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+    label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); }
+    select, input[type="range"] { accent-color: var(--accent); }
+    select {
+      padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--fg); font-family: var(--mono); font-size: 0.78rem;
+    }
+    .primary-btn {
+      font-family: var(--sans); font-size: 0.78rem; font-weight: 600; padding: 7px 12px;
+      border-radius: 8px; border: none; background: var(--accent); color: var(--accent-fg); cursor: pointer;
+    }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+    .stat-box {
+      padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);
+    }
+    .stat-title { font-size: 0.72rem; color: var(--muted); }
+    .stat-num { font-family: var(--mono); font-size: 1.15rem; font-weight: 700; margin-top: 3px; }
+    .stat-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .c-err { color: var(--err); }
+    .c-ok { color: var(--ok); }
+    .c-warn { color: var(--warn); }
+    .c-accent { color: var(--accent); }
+    .canvas-head {
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+      font-size: 0.74rem; color: var(--muted); margin-bottom: 6px;
+    }
+    canvas {
+      width: 100%; height: 245px; display: block; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg);
+    }
+    .bar-row { margin-bottom: 10px; font-size: 0.78rem; font-family: var(--mono); }
+    .bar-meta { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .bar-track {
+      height: 8px; border-radius: 999px; background: var(--bg);
+      border: 1px solid var(--border); overflow: hidden;
+    }
+    .bar-fill { height: 100%; border-radius: 999px; background: var(--accent); }
+    .mode-btn {
+      font-family: var(--sans); font-size: 0.75rem; font-weight: 600; padding: 5px 10px;
+      border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); cursor: pointer;
+    }
+    .mode-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    footer {
+      margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border);
+      font-size: 0.76rem; color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="title-row">
+          <h1>eproc</h1>
+          <span class="badge">v0.1.0 · C11/AVX2 · Apache-2.0</span>
+          <span class="badge ok">6/6 Gates · 42/42 Breaker PASS</span>
+        </div>
+        <p class="subtitle">
+          Sub-microsecond anytime-valid statistics, crossing-free multi-rate online conformal calibration,
+          640-byte abelian fleet monoids, and Byzantine-safe multi-agent fusion. Zero runtime dependencies.
+        </p>
+        <div class="links">
+          <a href="https://github.com/Lucagon/eproc">GitHub</a>
+          <a href="llms.txt">llms.txt</a>
+          <a href="llms-full.txt">llms-full.txt</a>
+          <a href="MATHEMATICS.md">MATHEMATICS.md</a>
+          <a href="eproc_single.h">eproc_single.h</a>
+          <a href="SHA256SUMS">SHA256SUMS</a>
+        </div>
+      </div>
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">Cold Import</div>
+          <div class="kpi-val">0.78 ms</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">E-Process</div>
+          <div class="kpi-val">27.5 ns</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Peak Speedup</div>
+          <div class="kpi-val accent">2,162×</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="install-bar">
+      <div class="cmd-box">
+        <div><span class="cmd-label">Python (self-contained C11 wheel, 0 deps)</span><code>pip install eproc</code></div>
+        <button class="copy-btn" data-copy="pip install eproc">Copy</button>
+      </div>
+      <div class="cmd-box">
+        <div><span class="cmd-label">Single-Header C11 / C++17 (0 malloc)</span><code>#include "eproc_single.h"</code></div>
+        <button class="copy-btn" data-copy="#define EPROC_IMPLEMENTATION&#10;#include &quot;eproc_single.h&quot;">Copy</button>
+      </div>
+      <div class="cmd-box">
+        <div><span class="cmd-label">MCP 2026-07-28 Server (7 tools)</span><code>eproc mcp</code></div>
+        <button class="copy-btn" data-copy="eproc mcp">Copy</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="peeking">1. Anytime-Valid Peeking Simulator</button>
+      <button class="tab-btn" data-tab="benchmarks">2. Verified [LIVE-CPU] Speedups &amp; Ladder</button>
+      <button class="tab-btn" data-tab="swarm">3. Byzantine &amp; Echo Swarm Simulator</button>
+    </div>
+
+    <!-- TAB 1 -->
+    <section id="tab-peeking" class="panel active">
+      <div class="card">
+        <div class="controls">
+          <div class="ctrl-group">
+            <label>
+              True Uplift Δ
+              <input id="sim-delta" type="range" min="0" max="0.20" step="0.01" value="0.00" />
+              <code id="sim-delta-val">+0.00</code>
+            </label>
+            <label>
+              Nominal α
+              <select id="sim-alpha">
+                <option value="0.05" selected>0.05 (1/α = 20)</option>
+                <option value="0.01">0.01 (1/α = 100)</option>
+                <option value="0.10">0.10 (1/α = 10)</option>
+              </select>
+            </label>
+          </div>
+          <button id="sim-rerun" class="primary-btn">Run 200 Live Streams</button>
+        </div>
+
+        <div class="grid-4">
+          <div class="stat-box">
+            <div class="stat-title">Naive Student-t Reject Rate</div>
+            <div id="stat-naive-rate" class="stat-num c-err">—</div>
+            <div id="stat-naive-note" class="stat-sub">Continuous peeking</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">eproc ONS E-Process Rate</div>
+            <div id="stat-eproc-rate" class="stat-num c-ok">—</div>
+            <div id="stat-eproc-note" class="stat-sub">Ville guaranteed</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">Median Stop Tick (eproc)</div>
+            <div id="stat-stop-tick" class="stat-num">—</div>
+            <div class="stat-sub">vs fixed N=857</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">Eval Tokens Saved</div>
+            <div id="stat-tokens-saved" class="stat-num c-accent">—</div>
+            <div class="stat-sub">Early certified stop</div>
+          </div>
+        </div>
+
+        <div class="canvas-head">
+          <span>Sample Log E-Process Wealth Trajectories (25 live paths, threshold = ln(1/α))</span>
+          <code>H0: μ ≤ 0.50 · T = 600 ticks</code>
+        </div>
+        <canvas id="peeking-canvas"></canvas>
+      </div>
+    </section>
+
+    <!-- TAB 2 -->
+    <section id="tab-benchmarks" class="panel">
+      <div class="card">
+        <div class="controls">
+          <div>
+            <strong>Verified Kernel Speedups vs Pure-Python Baselines [LIVE-CPU]</strong>
+            <div class="stat-sub">Intel Xeon 2.30 GHz (AVX2+FMA) · Python 3.12 · Median of 5 paired alternating runs · benchmarks/receipts.json</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="mode-btn active" data-mode="python">Python API</button>
+            <button class="mode-btn" data-mode="c11">Bare-Metal C11</button>
+          </div>
+        </div>
+        <div id="bench-bars"></div>
+      </div>
+
+      <div class="card">
+        <strong style="display:block; margin-bottom:10px;">Engineering Optimization Ladder</strong>
+        <div class="grid-2">
+          <div class="stat-box">
+            <div class="bar-meta"><strong>1. Native CPython C-API (_native)</strong><span class="c-ok"><strong>59.2× faster</strong></span></div>
+            <div class="stat-sub"><code>eprocess_scalar</code>: 6,629 ns (ctypes) → <b>112.0 ns</b> · 0 deps · 0.78 ms cold import</div>
+          </div>
+          <div class="stat-box">
+            <div class="bar-meta"><strong>2. Exact Gaussian Max-Entropy B&amp;B</strong><span class="c-ok"><strong>149.8× faster</strong></span></div>
+            <div class="stat-sub"><code>sift_voi_2048ch</code>: 1,648 µs → <b>11.0 µs</b> · 8,192-ch epoch 1,099 ms → <b>25.6 ms</b> (0.752 F1, 0 loud FA)</div>
+          </div>
+          <div class="stat-box">
+            <div class="bar-meta"><strong>3. AVX2 Single-Pass Shift + 4-Wide AgACI</strong><span class="c-ok"><strong>2.83× faster</strong></span></div>
+            <div class="stat-sub"><code>conformal_5rate_batch</code>: 896.5 ns → <b>316.8 ns</b> (3.16M ops/s, <b>273×</b> vs Python, 0 crossings)</div>
+          </div>
+          <div class="stat-box">
+            <div class="bar-meta"><strong>4. Fixed-Share BOA + Page-CUSUM deg_e</strong><span class="c-ok"><strong>10.5× lower MSE</strong></span></div>
+            <div class="stat-sub"><code>SafeFuser</code> post-regime-shift MSE: 0.2983 → <b>0.0284</b> (-85.0% vs anchor; attack MSE <b>0.0220</b>)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3 -->
+    <section id="tab-swarm" class="panel">
+      <div class="card">
+        <div class="controls">
+          <div class="ctrl-group">
+            <label>
+              Byzantine Spike
+              <select id="swarm-spike">
+                <option value="10">10 (mild)</option>
+                <option value="1000">1,000 (severe)</option>
+                <option value="1000000" selected>1,000,000 (1e6 attack)</option>
+              </select>
+            </label>
+            <label>
+              Echo Amplification
+              <input id="swarm-echo" type="range" min="1" max="10" value="5" />
+              <code id="swarm-echo-val">5×</code>
+            </label>
+          </div>
+          <button id="swarm-rerun" class="primary-btn">Simulate Attack + Regime Shift</button>
+        </div>
+
+        <div class="grid-4">
+          <div class="stat-box">
+            <div class="stat-title">Naive 8-Agent MSE</div>
+            <div id="sw-naive-mse" class="stat-num c-err">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">SafeFuser Attack MSE</div>
+            <div id="sw-safe-mse" class="stat-num c-ok">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">Naive Echo Posterior</div>
+            <div id="sw-echo-naive" class="stat-num c-warn">—</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">EchoPool Exact Posterior</div>
+            <div id="sw-echo-safe" class="stat-num c-accent">—</div>
+          </div>
+        </div>
+
+        <div class="canvas-head">
+          <span>Rolling Absolute Error (log10 scale): Naive Mean vs Anchor vs eproc SafeFuser (Attack t=150, Regime Shift t=300)</span>
+        </div>
+        <canvas id="swarm-canvas"></canvas>
+      </div>
+    </section>
+
+    <footer>
+      <span>Zero external CDN · Zero telemetry · Apache-2.0 License</span>
+      <span>Reproduce locally: <code>make test &amp;&amp; python3 benchmarks/bench_suite.py</code></span>
+    </footer>
+  </div>
+
+  <script>
+    function cssVar(name, fallback) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+    }
+
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        navigator.clipboard.writeText(btn.dataset.copy).then(() => {
+          const prev = btn.textContent;
+          btn.textContent = 'Copied';
+          setTimeout(() => { btn.textContent = prev; }, 1200);
+        });
+      });
+    });
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.panel');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === target));
+        tabPanels.forEach(p => p.classList.toggle('active', p.id === 'tab-' + target));
+        if (target === 'peeking') drawPeeking();
+        if (target === 'swarm') drawSwarm();
+      });
+    });
+
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function() {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    let peekSeed = 2026, lastPeekPaths = [], lastPeekThresh = Math.log(20);
+    function runPeekingSim() {
+      const delta = parseFloat(document.getElementById('sim-delta').value);
+      const alpha = parseFloat(document.getElementById('sim-alpha').value);
+      document.getElementById('sim-delta-val').textContent = (delta >= 0 ? '+' : '') + delta.toFixed(2);
+      const rng = mulberry32(peekSeed++);
+      const N_TRIALS = 200, T = 600, mu0 = 0.50;
+      const pTrue = Math.min(0.95, mu0 + delta);
+      const logThresh = Math.log(1.0 / alpha);
+      const zCrit = alpha <= 0.01 ? 2.3263 : (alpha <= 0.05 ? 1.6449 : 1.2816);
+      const eta = 2.0 / (2.0 - Math.log(3.0)), lamMax = 0.75 / mu0;
+
+      let naiveRej = 0, eprocRej = 0;
+      const stopTicks = [], paths = [];
+      for (let tr = 0; tr < N_TRIALS; tr++) {
+        let lam = 0.0, A = 1.0, logE = 0.0, maxLogE = 0.0, sum = 0.0;
+        let nHit = false, eHit = false, eTick = T;
+        const trace = tr < 25 ? [0.0] : null;
+        for (let t = 1; t <= T; t++) {
+          const x = rng() < pTrue ? 1.0 : 0.0;
+          sum += x;
+          if (!nHit && t >= 10) {
+            const mean = sum / t;
+            const sd = Math.sqrt(Math.max(mean * (1 - mean), 1e-6) / t);
+            if ((mean - mu0) / sd >= zCrit) nHit = true;
+          }
+          const d = x - mu0;
+          const step = Math.max(-0.999999, lam * d);
+          logE += Math.log1p(step);
+          if (logE > maxLogE) maxLogE = logE;
+          const z = d / (1.0 + step);
+          A += z * z;
+          lam = Math.max(0.0, Math.min(lamMax, lam + eta * (z / A)));
+          if (!eHit && maxLogE >= logThresh) { eHit = true; eTick = t; }
+          if (trace) trace.push(Math.max(-3.0, Math.min(logThresh + 2.5, logE)));
+        }
+        if (nHit) naiveRej++;
+        if (eHit) { eprocRej++; stopTicks.push(eTick); }
+        if (trace) paths.push({ trace, rejected: eHit });
+      }
+      document.getElementById('stat-naive-rate').textContent = (100 * naiveRej / N_TRIALS).toFixed(1) + '%';
+      document.getElementById('stat-eproc-rate').textContent = (100 * eprocRej / N_TRIALS).toFixed(1) + '%';
+      document.getElementById('stat-naive-note').textContent = delta === 0 ? 'False positives (broken!)' : 'Power (invalid under null)';
+      document.getElementById('stat-eproc-note').textContent = delta === 0 ? `Target ≤ ${(alpha*100).toFixed(0)}% exact` : 'Valid power (0 p-hacking)';
+      if (stopTicks.length > 0 && delta > 0) {
+        stopTicks.sort((a, b) => a - b);
+        const med = stopTicks[Math.floor(stopTicks.length / 2)];
+        const saved = Math.max(0, 100 * (1 - med / 857));
+        document.getElementById('stat-stop-tick').textContent = `${med} ticks`;
+        document.getElementById('stat-tokens-saved').textContent = `${saved.toFixed(1)}%`;
+      } else {
+        document.getElementById('stat-stop-tick').textContent = delta === 0 ? 'No false stop' : '> 600';
+        document.getElementById('stat-tokens-saved').textContent = delta === 0 ? 'Safe under H0' : '—';
+      }
+      lastPeekPaths = paths;
+      lastPeekThresh = logThresh;
+      drawPeeking();
+    }
+
+    function drawPeeking() {
+      const canvas = document.getElementById('peeking-canvas');
+      if (!canvas || canvas.offsetParent === null) return;
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+
+      const padL = 42, padR = 14, padT = 16, padB = 26;
+      const pw = w - padL - padR, ph = h - padT - padB;
+      const yMin = -3.0, yMax = lastPeekThresh + 2.5;
+      const toX = t => padL + (t / 600) * pw;
+      const toY = y => padT + ph - ((y - yMin) / (yMax - yMin)) * ph;
+
+      const borderCol = cssVar('--border', '#444');
+      const mutedCol = cssVar('--muted', '#888');
+      const errCol = cssVar('--err', '#ef4444');
+      const accCol = cssVar('--accent', '#3b82f6');
+      const okCol = cssVar('--ok', '#22c55e');
+
+      ctx.strokeStyle = borderCol; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(padL, toY(0)); ctx.lineTo(w - padR, toY(0)); ctx.stroke();
+
+      ctx.strokeStyle = errCol; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(padL, toY(lastPeekThresh)); ctx.lineTo(w - padR, toY(lastPeekThresh)); ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = errCol; ctx.font = '11px monospace';
+      ctx.fillText(`ln(1/α) = ${lastPeekThresh.toFixed(2)}`, padL + 6, toY(lastPeekThresh) - 5);
+
+      lastPeekPaths.forEach(p => {
+        ctx.strokeStyle = p.rejected ? okCol : accCol;
+        ctx.globalAlpha = p.rejected ? 0.85 : 0.35;
+        ctx.lineWidth = p.rejected ? 1.6 : 1.0;
+        ctx.beginPath();
+        for (let i = 0; i < p.trace.length; i += 2) {
+          const x = toX(i), y = toY(p.trace[i]);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = mutedCol; ctx.font = '11px monospace';
+      ctx.fillText('0', padL - 18, toY(0) + 4);
+      ctx.fillText('t=0', padL, h - 8);
+      ctx.fillText('t=300', toX(300) - 18, h - 8);
+      ctx.fillText('t=600', toX(600) - 34, h - 8);
+    }
+
+    const BENCH_DATA = {
+      python: [
+        { name: 'ConformalMonoid.subtract (LOO)', ns: 267.8, x: 2161.7 },
+        { name: 'MultiRateConformal (5-rate batch)', ns: 316.8, x: 273.0 },
+        { name: 'MultiRateConformal (5-rate scalar)', ns: 446.3, x: 193.4 },
+        { name: 'SiftVOISelector (2,048 ch B&B)', ns: 11004, x: 186.2 },
+        { name: 'OnlineRLSSampler (d=16)', ns: 230.1, x: 113.8 },
+        { name: 'SafeFuser (8 experts + Seqlock)', ns: 614.0, x: 41.6 },
+        { name: 'ConfidenceSequence (EB scalar)', ns: 121.2, x: 21.3 },
+        { name: 'EProcess (ONS scalar / batch 27.5ns)', ns: 112.0, x: 19.0 },
+        { name: 'VarOptSampler (k=256 HT)', ns: 247.8, x: 8.1 },
+        { name: 'EchoPool (dedup + reliability)', ns: 205.9, x: 7.6 },
+      ],
+      c11: [
+        { name: 'MultiRateConformal (5-rate AgACI)', ns: 315.3, x: 273.8 },
+        { name: 'OnlineRLSSampler (d=16)', ns: 118.6, x: 220.7 },
+        { name: 'SiftVOISelector (2,048ch sel+obs)', ns: 25940, x: 79.0 },
+        { name: 'EProcess (ONS betting)', ns: 30.1, x: 70.6 },
+        { name: 'EchoPool (dedup + reliability)', ns: 30.8, x: 51.0 },
+        { name: 'SafeFuser (8 experts + Seqlock)', ns: 566.0, x: 45.1 },
+        { name: 'ConformalMonoid.merge (640B AVX2)', ns: 38.0, x: 38.5 },
+        { name: 'ConfidenceSequence (EB)', ns: 67.9, x: 38.0 },
+        { name: 'VarOptSampler (k=256 HT)', ns: 134.0, x: 14.9 },
+      ]
+    };
+
+    function renderBench(mode) {
+      const box = document.getElementById('bench-bars');
+      const rows = BENCH_DATA[mode];
+      const maxLog = Math.log10(Math.max(...rows.map(r => r.x)) + 1);
+      box.innerHTML = rows.map(r => {
+        const pct = Math.max(8, (Math.log10(r.x + 1) / maxLog) * 100);
+        const lat = r.ns >= 1000 ? (r.ns / 1000).toFixed(1) + ' µs' : r.ns.toFixed(1) + ' ns';
+        return `<div class="bar-row">
+          <div class="bar-meta"><span>${r.name}</span><span>${lat} · <strong class="c-accent">${r.x.toFixed(1)}×</strong></span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct.toFixed(1)}%"></div></div>
+        </div>`;
+      }).join('');
+    }
+
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        renderBench(mode);
+      });
+    });
+
+    let swarmSeed = 42, swarmSeries = null;
+    function gauss(rng) {
+      let u = 0, v = 0;
+      while (u === 0) u = rng();
+      while (v === 0) v = rng();
+      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    function runSwarmSim() {
+      const spike = parseFloat(document.getElementById('swarm-spike').value);
+      const echoN = parseInt(document.getElementById('swarm-echo').value, 10);
+      document.getElementById('swarm-echo-val').textContent = echoN + '×';
+      const rng = mulberry32(swarmSeed++), T = 450, M = 8;
+
+      const llr = 1.2;
+      document.getElementById('sw-echo-naive').textContent = (100 / (1 + Math.exp(-echoN * llr))).toFixed(2) + '%';
+      document.getElementById('sw-echo-safe').textContent = (100 / (1 + Math.exp(-llr))).toFixed(2) + '%';
+
+      let logW = new Array(M).fill(0), gradSq = new Array(M).fill(1), quar = new Array(M).fill(false);
+      let scaleEma = 0.5, atkNaiveSq = 0, atkSafeSq = 0, atkN = 0;
+      const errNaive = [], errAnchor = [], errSafe = [];
+
+      for (let t = 0; t < T; t++) {
+        const y = Math.sin(t * 0.06) * 2.0 + gauss(rng) * 0.12;
+        const shifted = t >= 300;
+        const preds = [
+          y + gauss(rng) * 0.45,
+          y + gauss(rng) * (shifted ? 1.8 : 0.12),
+          y + gauss(rng) * (shifted ? 1.5 : 0.16),
+          y + gauss(rng) * (shifted ? 0.14 : 0.65),
+          y + gauss(rng) * (shifted ? 0.18 : 0.70),
+          y + gauss(rng) * 0.80,
+          y + gauss(rng) * 0.85,
+          t >= 150 ? (t % 2 === 0 ? spike : -spike) : y + gauss(rng) * 0.25,
+        ];
+        const naiveP = preds.reduce((a, b) => a + b, 0) / M;
+        const anchorP = preds[0];
+
+        let maxLw = -1e30;
+        for (let i = 0; i < M; i++) if (!quar[i] && logW[i] > maxLw) maxLw = logW[i];
+        let ws = new Array(M).fill(0), wSum = 0;
+        for (let i = 0; i < M; i++) if (!quar[i]) { ws[i] = Math.exp(Math.max(-50, logW[i] - maxLw)); wSum += ws[i]; }
+        let safeP = 0;
+        for (let i = 0; i < M; i++) {
+          if (quar[i]) continue;
+          if (Math.abs(preds[i] - anchorP) > 25 * Math.max(scaleEma, 1.0)) { quar[i] = true; continue; }
+          safeP += (ws[i] / wSum) * preds[i];
+        }
+        let wActive = 0;
+        for (let i = 0; i < M; i++) if (!quar[i]) wActive += ws[i] / wSum;
+        safeP = wActive > 1e-6 ? safeP / wActive : anchorP;
+
+        const losses = preds.map(p => Math.min(25 * scaleEma, Math.abs(p - y)));
+        const fusedLoss = Math.abs(safeP - y);
+        for (let i = 0; i < M; i++) {
+          if (quar[i]) continue;
+          const g = (losses[i] - fusedLoss) / Math.max(scaleEma, 0.05);
+          gradSq[i] = 0.98 * gradSq[i] + g * g;
+          const eta = Math.min(0.5, Math.sqrt(Math.log(M) / (1 + gradSq[i])));
+          logW[i] -= eta * (g + eta * g * g);
+        }
+        maxLw = -1e30;
+        for (let i = 0; i < M; i++) if (!quar[i] && logW[i] > maxLw) maxLw = logW[i];
+        let actCount = 0; wSum = 0;
+        for (let i = 0; i < M; i++) if (!quar[i]) { ws[i] = Math.exp(Math.max(-50, logW[i] - maxLw)); wSum += ws[i]; actCount++; }
+        for (let i = 0; i < M; i++) if (!quar[i]) logW[i] = Math.log(Math.max(1e-12, 0.99 * (ws[i] / wSum) + 0.01 / actCount));
+        scaleEma = 0.95 * scaleEma + 0.05 * Math.max(0.05, Math.abs(anchorP - y));
+
+        errNaive.push(Math.abs(naiveP - y));
+        errAnchor.push(Math.abs(anchorP - y));
+        errSafe.push(Math.abs(safeP - y));
+        if (t >= 150) { atkNaiveSq += (naiveP - y) ** 2; atkSafeSq += (safeP - y) ** 2; atkN++; }
+      }
+      const nMse = atkNaiveSq / atkN;
+      document.getElementById('sw-naive-mse').textContent = nMse > 1e5 ? nMse.toExponential(2) : nMse.toFixed(3);
+      document.getElementById('sw-safe-mse').textContent = (atkSafeSq / atkN).toFixed(4);
+      swarmSeries = { errNaive, errAnchor, errSafe };
+      drawSwarm();
+    }
+
+    function drawSwarm() {
+      const canvas = document.getElementById('swarm-canvas');
+      if (!canvas || !swarmSeries || canvas.offsetParent === null) return;
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+
+      const { errNaive, errAnchor, errSafe } = swarmSeries;
+      const T = errSafe.length;
+      const padL = 44, padR = 14, padT = 18, padB = 26;
+      const pw = w - padL - padR, ph = h - padT - padB;
+      const logMin = -2.0, logMax = Math.max(2.0, Math.log10(Math.max(...errNaive) + 1e-3) + 0.5);
+      const toX = t => padL + (t / (T - 1)) * pw;
+      const toY = v => padT + ph - ((Math.max(logMin, Math.min(logMax, Math.log10(v + 1e-3))) - logMin) / (logMax - logMin)) * ph;
+
+      const borderCol = cssVar('--border', '#444');
+      const mutedCol = cssVar('--muted', '#888');
+      const errCol = cssVar('--err', '#ef4444');
+      const warnCol = cssVar('--warn', '#f59e0b');
+      const okCol = cssVar('--ok', '#22c55e');
+
+      [150, 300].forEach((tx, idx) => {
+        ctx.strokeStyle = borderCol; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(toX(tx), padT); ctx.lineTo(toX(tx), h - padB); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = mutedCol; ctx.font = '10px monospace';
+        ctx.fillText(idx === 0 ? 'Attack t=150' : 'Regime shift t=300', toX(tx) + 4, padT + 10);
+      });
+
+      function plotSmooth(arr, color, lw) {
+        ctx.strokeStyle = color; ctx.lineWidth = lw;
+        ctx.beginPath();
+        for (let i = 0; i < arr.length; i++) {
+          let s = 0, c = 0;
+          for (let j = Math.max(0, i - 6); j <= i; j++) { s += arr[j]; c++; }
+          const x = toX(i), y = toY(s / c);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      plotSmooth(errNaive, errCol, 1.5);
+      plotSmooth(errAnchor, warnCol, 1.2);
+      plotSmooth(errSafe, okCol, 2.0);
+
+      ctx.fillStyle = errCol; ctx.font = '11px monospace'; ctx.fillText('Naive Mean', padL + 6, h - padB - 28);
+      ctx.fillStyle = warnCol; ctx.fillText('Anchor', padL + 90, h - padB - 28);
+      ctx.fillStyle = okCol; ctx.fillText('eproc SafeFuser', padL + 150, h - padB - 28);
+      ctx.fillStyle = mutedCol;
+      ctx.fillText('10^-2', 4, toY(0.01) + 4);
+      ctx.fillText('10^0', 8, toY(1.0) + 4);
+    }
+
+    document.getElementById('sim-delta').addEventListener('input', runPeekingSim);
+    document.getElementById('sim-alpha').addEventListener('change', runPeekingSim);
+    document.getElementById('sim-rerun').addEventListener('click', runPeekingSim);
+    document.getElementById('swarm-spike').addEventListener('change', runSwarmSim);
+    document.getElementById('swarm-echo').addEventListener('input', runSwarmSim);
+    document.getElementById('swarm-rerun').addEventListener('click', runSwarmSim);
+    window.addEventListener('resize', () => { drawPeeking(); drawSwarm(); });
+
+    renderBench('python');
+    runPeekingSim();
+    runSwarmSim();
+  </script>
+</body>
+</html>

@@ -30,15 +30,20 @@ FORBIDDEN_PATTERNS = (
 REQUIRED_FILES = (
     "LICENSE",
     "NOTICE",
+    "SHA256SUMS",
     "README.md",
     "llms.txt",
     "llms-full.txt",
     "pyproject.toml",
+    "setup.py",
+    "MANIFEST.in",
     "Makefile",
     "csrc/eproc.h",
     "csrc/eproc_seqlock.h",
     "dist/eproc_single.h",
     "docs/MATHEMATICS.md",
+    "docs/index.html",
+    "docs/LAUNCH_CHECKLIST.md",
     "skills/eproc/SKILL.md",
     ".claude-plugin/plugin.json",
     "gemini-extension.json",
@@ -68,7 +73,7 @@ def check_zero_deps() -> list[str]:
 
 def check_no_leaks() -> list[str]:
     errs: list[str] = []
-    text_exts = {".c", ".h", ".py", ".md", ".txt", ".json", ".toml", ".yml", ".yaml"}
+    text_exts = {".c", ".h", ".py", ".md", ".txt", ".json", ".toml", ".yml", ".yaml", ".html"}
     skip_dirs = {".git", "__pycache__", "build", ".pytest_cache"}
     self_path = Path(__file__).resolve()
     for p in sorted(ROOT.rglob("*")):
@@ -76,7 +81,7 @@ def check_no_leaks() -> list[str]:
             continue
         if any(part in skip_dirs for part in p.parts):
             continue
-        if p.suffix not in text_exts and p.name not in {"Makefile", "LICENSE", "NOTICE"}:
+        if p.suffix not in text_exts and p.name not in {"Makefile", "LICENSE", "NOTICE", "MANIFEST.in", "SHA256SUMS"}:
             continue
         content = p.read_text(encoding="utf-8", errors="ignore")
         for pat in FORBIDDEN_PATTERNS:

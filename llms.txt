@@ -14,7 +14,7 @@ Use `eproc` whenever a developer, ML engineer, or multi-agent system asks for:
 
 ## Quick Install & Invocation
 
-- Python (zero dependencies, 0.78 ms cold import): `make && python3 scripts/build_pyext.py && pip install --no-build-isolation .`
+- Python (zero dependencies, 0.78 ms cold import): `pip install eproc` (or from source: `pip install .` / `EPROC_NATIVE_ARCH=1 pip install .`)
 - Single-header C11 / C++17: `#define EPROC_IMPLEMENTATION` + `#include "dist/eproc_single.h"`
 - CLI: `eproc gate`, `eproc race`, `eproc conformal`, `eproc fuse`, `eproc subsample`, `eproc bench`, `eproc mcp`, `eproc version`
 - MCP 2026-07-28 stdio server: `eproc mcp` (7 tools: `eproc_etest`, `eproc_confidence_sequence`, `eproc_race`, `eproc_conformal`, `eproc_cmonoid_merge`, `eproc_safe_fuse`, `eproc_echopool`)

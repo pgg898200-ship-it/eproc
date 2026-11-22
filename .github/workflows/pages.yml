@@ -1,0 +1,44 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "llms.txt"
+      - "llms-full.txt"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage static site + Ramp-style llms.txt endpoints
+        run: |
+          mkdir -p _site
+          cp docs/index.html _site/index.html
+          cp docs/MATHEMATICS.md _site/MATHEMATICS.md
+          cp llms.txt _site/llms.txt
+          cp llms-full.txt _site/llms-full.txt
+          cp dist/eproc_single.h _site/eproc_single.h
+          cp SHA256SUMS _site/SHA256SUMS
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

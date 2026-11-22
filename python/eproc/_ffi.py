@@ -488,6 +488,13 @@ def _candidate_lib_paths() -> list[Path]:
         candidates.append(repo_root / libname)
         candidates.append(repo_root / "build" / libname)
         candidates.append(repo_root / "csrc" / libname)
+
+    # Self-contained wheel layout: eproc._native embeds the core C11 symbols directly,
+    # exporting the full libeproc ABI without requiring a separate shared library.
+    for pattern in ("_native*.so", "_native*.dylib", "_native*.pyd"):
+        for match in sorted(pkg_dir.glob(pattern)):
+            if ".tmp." not in match.name:
+                candidates.append(match)
     return candidates
 
 
@@ -740,28 +747,46 @@ def get_lib() -> CDLL:
             return _LIB
 
         chosen: str | None = None
-        for path in _candidate_lib_paths():
-            if path.is_file():
-                chosen = str(path)
-                break
+        lib: CDLL | None = None
+        load_errors: list[str] = []
 
-        if chosen is None:
+        for path in _candidate_lib_paths():
+            if not path.is_file():
+                continue
+            try:
+                cand_lib = CDLL(str(path))
+                if not hasattr(cand_lib, "eproc_abi_version"):
+                    continue
+                chosen = str(path)
+                lib = cand_lib
+                break
+            except OSError as exc:
+                load_errors.append(f"{path}: {exc}")
+
+        if lib is None:
             sys_lib = ctypes.util.find_library("eproc")
             if sys_lib:
-                chosen = sys_lib
+                try:
+                    cand_lib = CDLL(sys_lib)
+                    if hasattr(cand_lib, "eproc_abi_version"):
+                        chosen = sys_lib
+                        lib = cand_lib
+                except OSError as exc:
+                    load_errors.append(f"{sys_lib}: {exc}")
 
-        if chosen is None:
+        if lib is None:
             compiled = _compile_on_demand()
             if compiled is not None:
                 chosen = str(compiled)
+                lib = CDLL(chosen)
 
-        if chosen is None:
+        if lib is None or chosen is None:
+            detail = f" ({'; '.join(load_errors)})" if load_errors else ""
             raise OSError(
                 "Could not find or compile libeproc shared library. "
-                "Set EPROC_LIB_PATH or build libeproc.so from csrc/."
+                f"Set EPROC_LIB_PATH or build libeproc.so from csrc/.{detail}"
             )
 
-        lib = CDLL(chosen)
         _bind_prototypes(lib)
 
         abi = int(lib.eproc_abi_version())

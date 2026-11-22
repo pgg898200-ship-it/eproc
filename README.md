@@ -40,10 +40,13 @@ Live multi-agent systems, online evaluators, model routers, and streaming ML pip
 ### Python (3.10+, zero external deps)
 
 ```bash
-git clone https://github.com/<org>/eproc.git
+pip install eproc
+
+# Or build directly from source (compiles self-contained C11 _native wheel):
+git clone https://github.com/Lucagon/eproc.git
 cd eproc
-make && python3 scripts/build_pyext.py
-pip install --no-build-isolation .
+pip install .                           # portable C11 build
+EPROC_NATIVE_ARCH=1 pip install .       # host-tuned AVX2/FMA/NEON build
 ```
 
 ### Single-Header C11 / C++17 (stb-style, 1 file)
@@ -100,7 +103,7 @@ from eproc import MultiRateConformal, ConformalMonoid
 
 # Calibrate 50/80/90/95/99% intervals simultaneously in 316 ns/step (zero quantile crossing)
 cp = MultiRateConformal(alphas=(0.50, 0.20, 0.10, 0.05, 0.01), window_size=128, pid_ki=0.05)
-lows, highs, _ = cp.predict(point_pred=10.0, scale=1.0)
+pred = cp.predict(10.0, scale=1.0)       # pred.lows, pred.highs, pred.radii (strictly nested)
 cp.update(abs(y_true - 10.0))
 
 # Distributed fleet calibration: 640 bytes/agent, bit-exact abelian merge + LOO peer borrow
@@ -216,11 +219,13 @@ python3 scripts/verify_release_hygiene.py --strict
 
 ## Documentation & Agent Discovery
 
+- **[Interactive Browser Lab & Benchmarks](https://lucagon.github.io/eproc/)** ([`docs/index.html`](docs/index.html)) — Zero-CDN live peeking simulator, verified `[LIVE-CPU]` speedup explorer, and Byzantine/echo swarm lab.
 - [`docs/MATHEMATICS.md`](docs/MATHEMATICS.md) — Exact theorems, martingale proofs, and literature citations.
 - [`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md) & [`benchmarks/receipts.json`](benchmarks/receipts.json) — Reproducible live benchmark report and raw JSON receipts.
 - [`BREAKER_REPORT.md`](BREAKER_REPORT.md) — Adversarial red-team audit and full Cycle-3 resolution log.
 - [`llms.txt`](llms.txt) & [`llms-full.txt`](llms-full.txt) — Machine-readable Markdown reference for AI coding agents and research assistants.
 - [`skills/eproc/SKILL.md`](skills/eproc/SKILL.md) — Drop-in Agent Skill specification.
+- [`SHA256SUMS`](SHA256SUMS) — Deterministic supply-chain digests for canonical headers, receipts, and license files.
 
 ## License
 

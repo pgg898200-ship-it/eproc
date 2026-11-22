@@ -1,0 +1,149 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-sdist-and-headers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify C11 core, single-header C11 & C++17, and hygiene
+        run: |
+          make test
+          python3 scripts/make_single_header.py
+          cc -std=c11 -O3 -ffp-contract=off -Wall -Wextra -Werror -x c - -lm -o /tmp/test_sh_c <<'EOF'
+          #define EPROC_IMPLEMENTATION
+          #include "dist/eproc_single.h"
+          #include <assert.h>
+          int main(void) {
+              eproc_bet_t ep;
+              eproc_bet_result_t res;
+              assert(eproc_bet_init(&ep, 0.5, 0.05, 0.0, 1.0, EPROC_SIDE_UPPER) == EPROC_OK);
+              assert(eproc_bet_update(&ep, 1.0, &res) == EPROC_OK);
+              assert(res.n == 1);
+              return 0;
+          }
+          EOF
+          /tmp/test_sh_c
+          c++ -std=c++17 -O3 -ffp-contract=off -Wall -Wextra -Werror -x c++ - -lm -o /tmp/test_sh_cpp <<'EOF'
+          #define EPROC_IMPLEMENTATION
+          #include "dist/eproc_single.h"
+          #include <cassert>
+          int main() {
+              eproc_bet_t ep;
+              eproc_bet_result_t res;
+              assert(eproc_bet_init(&ep, 0.5, 0.05, 0.0, 1.0, EPROC_SIDE_UPPER) == EPROC_OK);
+              assert(eproc_bet_update(&ep, 1.0, &res) == EPROC_OK);
+              assert(res.n == 1);
+              return 0;
+          }
+          EOF
+          /tmp/test_sh_cpp
+          python3 scripts/verify_release_hygiene.py --strict
+
+      - name: Build source distribution (sdist)
+        run: |
+          python3 -m pip install --upgrade pip build
+          python3 -m build --sdist --outdir release_dist
+
+      - name: Copy single-header & C11 ABI header to release bundle
+        run: |
+          cp dist/eproc_single.h release_dist/eproc_single.h
+          cp csrc/eproc.h release_dist/eproc.h
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-sdist-headers
+          path: release_dist/
+
+  build-wheels:
+    needs: build-sdist-and-headers
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64
+          - os: ubuntu-24.04-arm
+            arch: aarch64
+          - os: macos-14
+            arch: arm64
+          - os: macos-13
+            arch: x86_64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pypa/cibuildwheel@v2.22.0
+        env:
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
+          CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_TEST_COMMAND: >
+            python -c "import eproc; ep=eproc.EProcess(mu0=0.5, alpha=0.05); r=ep.update_batch([1.0]*40); assert r.rejected; m=eproc.ConformalMonoid(); m.add(0.2); assert len(m.to_bytes())==640" &&
+            eproc version
+        with:
+          output-dir: wheelhouse
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.os }}-${{ matrix.arch }}
+          path: wheelhouse/*.whl
+
+  publish-pypi:
+    needs: [build-sdist-and-headers, build-wheels]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist_pypi/
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-sdist-headers
+          path: dist_sdist/
+      - run: cp dist_sdist/*.tar.gz dist_pypi/
+      - name: Publish wheels & sdist via PyPI OIDC Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist_pypi/
+
+  github-release:
+    needs: [build-sdist-and-headers, build-wheels]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: release_assets/
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-sdist-headers
+          path: release_assets/
+      - name: Generate SHA256SUMS for all release artifacts
+        working-directory: release_assets
+        run: sha256sum * > SHA256SUMS.txt
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release_assets/*
