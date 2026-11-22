@@ -11,9 +11,12 @@ import math
 import os
 from pathlib import Path
 import random
+import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PY_ROOT = REPO_ROOT / "python"
@@ -46,6 +49,18 @@ class TestColdImportAndABI(unittest.TestCase):
         )
         dt_ms = float(proc.stdout.strip())
         self.assertLess(dt_ms, 15.0, f"Cold import took {dt_ms:.2f} ms (limit 15 ms)")
+
+    @unittest.skipUnless(sys.platform in ("darwin", "linux"), "uses the POSIX source build")
+    def test_source_checkout_builds_loadable_native_core(self) -> None:
+        if not any(shutil.which(cc) for cc in (os.environ.get("CC") or "cc", "cc", "gcc", "clang")):
+            self.skipTest("requires a C11 compiler")
+        with tempfile.TemporaryDirectory() as temp:
+            sources = Path(temp) / "csrc"
+            sources.symlink_to(REPO_ROOT / "csrc", target_is_directory=True)
+            with patch.object(_ffi, "_find_csrc_dir", return_value=sources):
+                library = _ffi._compile_on_demand()
+            self.assertIsNotNone(library)
+            self.assertEqual(ctypes.CDLL(str(library)).eproc_abi_version(), _ffi.EPROC_ABI_VERSION)
 
     def test_abi_version_and_wire_size(self) -> None:
         self.assertEqual(eproc.abi_version(), _ffi.EPROC_ABI_VERSION)
