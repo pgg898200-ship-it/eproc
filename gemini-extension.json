@@ -1,0 +1,14 @@
+{
+  "name": "eproc",
+  "version": "0.1.0",
+  "description": "Sub-microsecond anytime-valid online statistical inference, multi-rate conformal calibration, Byzantine-safe multi-agent fusion, and causal subsampling.",
+  "contextFileName": "skills/eproc/SKILL.md",
+  "mcpServers": {
+    "eproc": {
+      "command": "eproc",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

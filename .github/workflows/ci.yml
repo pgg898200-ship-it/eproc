@@ -1,0 +1,49 @@
+name: eproc-ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify-c-and-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build C11 core (-O3 + portable) and run C unit tests
+        run: make test
+      - name: Run ASan + UBSan sanitizer suite
+        run: make test-asan
+      - name: Run TSan concurrent seqlock suite
+        run: make test-tsan
+      - name: Verify single-header C11 bundle compiles cleanly
+        run: |
+          python3 scripts/make_single_header.py
+          cc -std=c11 -O3 -ffp-contract=off -Wall -Wextra -Werror -x c - -lm -o /tmp/test_sh <<'EOF'
+          #define EPROC_IMPLEMENTATION
+          #include "dist/eproc_single.h"
+          #include <assert.h>
+          int main(void) {
+              eproc_bet_t ep;
+              eproc_bet_result_t res;
+              assert(eproc_bet_init(&ep, 0.5, 0.05, 0.0, 1.0, EPROC_SIDE_UPPER) == EPROC_OK);
+              assert(eproc_bet_update(&ep, 1.0, &res) == EPROC_OK);
+              assert(res.n == 1);
+              return 0;
+          }
+          EOF
+          /tmp/test_sh
+      - name: Verify Python zero-dep package, cold import < 15ms, API & Breaker suites
+        run: |
+          PYTHONPATH=python python3 -c "
+          import time
+          t0 = time.perf_counter()
+          import eproc
+          ms = (time.perf_counter() - t0) * 1000.0
+          print(f'Cold import: {ms:.2f} ms')
+          assert ms < 25.0, f'Cold import too slow: {ms:.2f} ms'
+          "
+          PYTHONPATH=python python3 -m unittest discover -s tests -v

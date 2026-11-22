@@ -1,0 +1,19 @@
+eproc — Sub-microsecond online & distributed statistical inference engine.
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Algorithms implemented from peer-reviewed literature with clean-room C11/SIMD
+implementations:
+- Ville (1939), Étude critique de la notion de collectif
+- Howard, Ramdas, McAuliffe, Sekhon (2021), Time-uniform, nonparametric,
+  nonasymptotic confidence sequences (Annals of Statistics)
+- Waudby-Smith & Ramdas (2024), Estimating means of bounded random variables
+  by betting (JRSS-B)
+- Vovk & Wang (2021), E-values: Calibration, combination and applications (AoS)
+- Gibbs & Candès (2021, 2024), Adaptive Conformal Inference (NeurIPS / JMLR)
+- Zaffran et al. (2022), Adaptive Conformal Predictions for Time Series (ICML)
+- Angelopoulos, Candès, Tibshirani (2023), Conformal PID Control (NeurIPS)
+- Wintenberger (2017), Optimal learning with Bernstein Online Aggregation (MLJ)
+- Cohen, Duffield, Kaplan, Lund, Thorup (2011), Stream Sampling for Variance-
+  Optimal Estimation of Subset Sums (SIAM J. Comput.)
+- Cohen, Musco, Pachocki (2016), Online Row Sampling (APPROX/RANDOM)
+- Boehm (2012), Can Seqlocks Get Along with Programming Language Memory Models?

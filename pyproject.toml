@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eproc"
+version = "0.1.0"
+description = "Sub-microsecond anytime-valid online statistical inference, multi-rate conformal calibration, Byzantine-safe multi-agent fusion, and causal subsampling (C11 + zero-dependency Python/MCP)."
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+dependencies = []
+keywords = [
+    "e-process",
+    "anytime-valid",
+    "confidence-sequence",
+    "conformal-prediction",
+    "multi-agent",
+    "byzantine-safe",
+    "mcp",
+    "sequential-testing",
+    "horvitz-thompson",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Programming Language :: C",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.scripts]
+eproc = "eproc.cli:main"
+eproc-mcp = "eproc.mcp_server:main"
+
+[tool.setuptools]
+package-dir = { "" = "python" }
+
+[tool.setuptools.packages.find]
+where = ["python"]
+include = ["eproc*"]
+
+[tool.setuptools.package-data]
+eproc = ["py.typed", "*.pyi", "*.so", "*.dylib", "*.dll"]

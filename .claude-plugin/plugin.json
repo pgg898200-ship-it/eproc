@@ -1,0 +1,18 @@
+{
+  "name": "eproc",
+  "version": "0.1.0",
+  "description": "Sub-microsecond anytime-valid online statistical inference, multi-rate conformal calibration, Byzantine-safe multi-agent fusion, and causal subsampling (C11 + zero-dependency MCP 2026-07-28 server).",
+  "license": "Apache-2.0",
+  "skills": [
+    "skills/eproc"
+  ],
+  "mcpServers": {
+    "eproc": {
+      "command": "eproc",
+      "args": [
+        "mcp"
+      ],
+      "env": {}
+    }
+  }
+}
