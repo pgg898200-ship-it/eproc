@@ -51,18 +51,20 @@ jobs:
           EOF
           /tmp/test_sh_cpp
           python3 scripts/verify_release_hygiene.py --strict
+          sha256sum -c SHA256SUMS
 
       - name: Build source distribution (sdist)
         run: |
           python3 -m pip install --upgrade pip build
           python3 -m build --sdist --outdir release_dist
 
-      - name: Copy single-header & C11 ABI header to release bundle
+      - name: Copy single-header, ABI header, and WASM bundle
         run: |
           cp dist/eproc_single.h release_dist/eproc_single.h
           cp csrc/eproc.h release_dist/eproc.h
+          if [ -f dist/eproc.wasm ]; then cp dist/eproc.wasm release_dist/eproc.wasm; fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-sdist-headers
           path: release_dist/
@@ -77,16 +79,16 @@ jobs:
             arch: x86_64
           - os: ubuntu-24.04-arm
             arch: aarch64
-          - os: macos-14
+          - os: macos-15
             arch: arm64
-          - os: macos-13
+          - os: macos-15-intel
             arch: x86_64
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: pypa/cibuildwheel@v2.22.0
+      - uses: pypa/cibuildwheel@v4
         env:
-          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_SKIP: "*-musllinux_* *-manylinux_i686"
           CIBW_ARCHS: ${{ matrix.arch }}
           CIBW_TEST_COMMAND: >
@@ -95,7 +97,7 @@ jobs:
         with:
           output-dir: wheelhouse
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.arch }}
           path: wheelhouse/*.whl
@@ -108,12 +110,12 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: wheels-*
           merge-multiple: true
           path: dist_pypi/
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: release-sdist-headers
           path: dist_sdist/
@@ -130,12 +132,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: wheels-*
           merge-multiple: true
           path: release_assets/
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: release-sdist-headers
           path: release_assets/
@@ -143,7 +145,7 @@ jobs:
         working-directory: release_assets
         run: sha256sum * > SHA256SUMS.txt
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           files: release_assets/*

@@ -7,6 +7,8 @@ on:
       - "docs/**"
       - "llms.txt"
       - "llms-full.txt"
+      - "dist/**"
+      - "SHA256SUMS"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -20,14 +22,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Stage static site + Ramp-style llms.txt endpoints
+      - name: Stage static site + Ramp-style llms.txt + WASM & header endpoints
         run: |
           mkdir -p _site
           cp docs/index.html _site/index.html
@@ -36,9 +35,20 @@ jobs:
           cp llms-full.txt _site/llms-full.txt
           cp dist/eproc_single.h _site/eproc_single.h
           cp SHA256SUMS _site/SHA256SUMS
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+          if [ -f dist/eproc.wasm ]; then cp dist/eproc.wasm _site/eproc.wasm; fi
+          if [ -f docs/COMPARISON.md ]; then cp docs/COMPARISON.md _site/COMPARISON.md; fi
+          touch _site/.nojekyll
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
