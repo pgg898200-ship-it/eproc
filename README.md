@@ -46,12 +46,16 @@ See [`docs/COMPARISON.md`](docs/COMPARISON.md) for a fair head-to-head benchmark
 
 ## Install (Zero Runtime Dependencies)
 
-### Python (3.10+, portable wheel with automatic runtime AVX2)
+### Python (3.10–3.14, portable wheels with automatic runtime AVX2)
 
 ```bash
-pip install eproc
+# Install directly from GitHub Release v0.1.0 (prebuilt wheels for Linux x86_64/aarch64 & macOS arm64/x86_64):
+pip install "eproc @ git+https://github.com/pgg898200-ship-it/eproc.git@v0.1.0"
+# Or grab a prebuilt wheel directly from Releases:
+# https://github.com/pgg898200-ship-it/eproc/releases/tag/v0.1.0
+# (And `pip install eproc` once PyPI OIDC Trusted Publishing is enabled)
 
-# Or build directly from source:
+# Or build from source:
 git clone https://github.com/pgg898200-ship-it/eproc.git
 cd eproc
 pip install .                           # portable wheel (auto-dispatches AVX2 on x86_64 via CPUID)
