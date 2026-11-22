@@ -508,17 +508,18 @@ def _find_csrc_dir() -> Path | None:
 
 
 def _compile_on_demand() -> Path | None:
-    """Compile ``libeproc`` on-demand from ``csrc/*.c`` if a C11 compiler exists."""
+    """Build the native C11 core for a source checkout."""
     csrc = _find_csrc_dir()
     if csrc is None:
         return None
 
-    c_files = sorted(
-        p for p in csrc.glob("*.c")
-        if not p.name.startswith(("test_", "bench_", "main"))
-        and p.name != "eproc_pyext.c"
-    )
-    if not c_files:
+    c_files = [
+        csrc / "eproc_eprocess.c",
+        csrc / "eproc_conformal.c",
+        csrc / "eproc_fusion.c",
+        csrc / "eproc_subsample.c",
+    ]
+    if not all(path.is_file() for path in c_files):
         return None
 
     compiler = None
@@ -549,7 +550,7 @@ def _compile_on_demand() -> Path | None:
         "-std=c11",
         "-O3",
         "-fPIC",
-        "-shared",
+        "-dynamiclib" if sys.platform == "darwin" else "-shared",
         "-ffp-contract=off",
         f"-I{csrc}",
         *[str(f) for f in c_files],
@@ -557,20 +558,6 @@ def _compile_on_demand() -> Path | None:
         str(tmp_path),
         "-lm",
     ]
-    if sys.platform == "darwin":
-        cmd = [
-            compiler,
-            "-std=c11",
-            "-O3",
-            "-fPIC",
-            "-dynamiclib",
-            "-ffp-contract=off",
-            f"-I{csrc}",
-            *[str(f) for f in c_files],
-            "-o",
-            str(tmp_path),
-            "-lm",
-        ]
 
     res = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if res.returncode != 0:
