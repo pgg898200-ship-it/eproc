@@ -230,6 +230,36 @@ static inline uint64_t eproc_seqlock_read_words_u64(const uint64_t *seq,
     }
 }
 
+static inline uint64_t eproc_seqlock_read_meta_words_u64(const uint64_t *seq,
+                                                         const uint64_t *src,
+                                                         size_t meta_idx,
+                                                         uint64_t *meta_out,
+                                                         uint64_t *dst,
+                                                         size_t max_words) {
+    for (;;) {
+        uint64_t s1 = __atomic_load_n(seq, __ATOMIC_ACQUIRE);
+        if ((s1 & 1ULL) != 0ULL) {
+            EPROC_CPU_PAUSE();
+            continue;
+        }
+        uint64_t meta = __atomic_load_n(&src[meta_idx], __ATOMIC_RELAXED);
+        size_t n_words = (size_t)(meta >> 32);
+        if (n_words > max_words) {
+            n_words = max_words;
+        }
+        for (size_t i = 0; i < n_words; ++i) {
+            dst[i] = __atomic_load_n(&src[i], __ATOMIC_RELAXED);
+        }
+        __atomic_thread_fence(__ATOMIC_ACQUIRE);
+        uint64_t s2 = __atomic_load_n(seq, __ATOMIC_RELAXED);
+        if (s1 == s2) {
+            *meta_out = meta;
+            return s1;
+        }
+        EPROC_CPU_PAUSE();
+    }
+}
+
 #else
 
 /* Fallback for non-GCC/Clang toolchains */
@@ -267,6 +297,27 @@ static inline uint64_t eproc_seqlock_read_words_u64(const uint64_t *seq,
     return eproc_seqlock_read_words((const eproc_seqlock_u64_atom_t *)(const void *)seq,
                                     (const eproc_seqlock_u64_atom_t *)(const void *)src,
                                     dst, n_words);
+}
+
+static inline uint64_t eproc_seqlock_read_meta_words_u64(const uint64_t *seq,
+                                                         const uint64_t *src,
+                                                         size_t meta_idx,
+                                                         uint64_t *meta_out,
+                                                         uint64_t *dst,
+                                                         size_t max_words) {
+    uint64_t full[66];
+    const size_t total = (meta_idx + 1U <= 66U) ? (meta_idx + 1U) : 66U;
+    uint64_t s = eproc_seqlock_read_words_u64(seq, src, full, total);
+    uint64_t meta = full[meta_idx];
+    size_t n_words = (size_t)(meta >> 32);
+    if (n_words > max_words) {
+        n_words = max_words;
+    }
+    for (size_t i = 0; i < n_words; ++i) {
+        dst[i] = full[i];
+    }
+    *meta_out = meta;
+    return s;
 }
 
 #endif /* __GNUC__ || __clang__ */

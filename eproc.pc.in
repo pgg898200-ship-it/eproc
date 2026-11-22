@@ -1,0 +1,12 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=@EPROC_PC_LIBDIR@
+includedir=@EPROC_PC_INCLUDEDIR@
+
+Name: eproc
+Description: @PROJECT_DESCRIPTION@
+Version: @PROJECT_VERSION@
+URL: @PROJECT_HOMEPAGE_URL@
+Libs: -L${libdir} -leproc
+Libs.private: -lm
+Cflags: -I${includedir}

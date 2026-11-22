@@ -4,12 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>eproc — Sub-Microsecond Anytime-Valid Statistics, Online Conformal &amp; Byzantine-Safe Multi-Agent Fusion</title>
-  <meta name="description" content="Zero-dependency C11/AVX2 + Python C-API + Single-Header C/C++17 + CLI + MCP 2026-07-28 engine for anytime-valid e-processes, crossing-free online conformal calibration, 640-byte abelian fleet monoids, and Byzantine-safe multi-agent fusion." />
+  <meta name="description" content="Zero-dependency C11/AVX2 + Python + WebAssembly (72 KiB) + Rust + Go + Single-Header C/C++17 + CLI + MCP 2026-07-28 engine for anytime-valid e-processes, crossing-free online conformal calibration, 640-byte abelian fleet monoids, and Byzantine-safe multi-agent fusion." />
   <style>
     :root {
       --bg: #ffffff;
       --surface: #f7f8fa;
-      --surface-2: #eef1f5;
       --fg: #111827;
       --muted: #4b5563;
       --border: #d8dee6;
@@ -25,7 +24,6 @@
       :root {
         --bg: #0b0f14;
         --surface: #121821;
-        --surface-2: #192230;
         --fg: #e5e7eb;
         --muted: #9ca3af;
         --border: #263244;
@@ -46,10 +44,10 @@
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
     }
-    .wrap { max-width: 1020px; margin: 0 auto; }
+    .wrap { max-width: 1040px; margin: 0 auto; }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    code, pre { font-family: var(--mono); }
+    code, pre, textarea { font-family: var(--mono); }
     header {
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
       gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
@@ -61,7 +59,7 @@
       border: 1px solid var(--border); background: var(--surface); color: var(--muted);
     }
     .badge.ok { color: var(--ok); }
-    .subtitle { margin: 6px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 640px; }
+    .subtitle { margin: 6px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 650px; }
     .links { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.8rem; font-family: var(--mono); }
     .kpis { display: flex; gap: 8px; flex-wrap: wrap; }
     .kpi {
@@ -72,15 +70,15 @@
     .kpi-val { font-size: 0.95rem; font-weight: 700; margin-top: 2px; }
     .kpi-val.accent { color: var(--accent); }
     .install-bar {
-      margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;
+      margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px;
     }
     .cmd-box {
       padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface);
-      display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.78rem;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 0.76rem;
     }
     .cmd-label { font-size: 0.68rem; color: var(--muted); display: block; margin-bottom: 2px; }
     .copy-btn {
-      font-family: var(--mono); font-size: 0.72rem; padding: 4px 8px; border-radius: 6px;
+      font-family: var(--mono); font-size: 0.7rem; padding: 4px 8px; border-radius: 6px;
       border: 1px solid var(--border); background: var(--bg); color: var(--fg); cursor: pointer;
     }
     .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
@@ -104,24 +102,35 @@
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
       gap: 12px; margin-bottom: 14px; font-size: 0.8rem;
     }
-    .ctrl-group { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
-    label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); }
-    select, input[type="range"] { accent-color: var(--accent); }
-    select {
+    .ctrl-group { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+    label { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); }
+    select, input[type="range"], input[type="number"] { accent-color: var(--accent); }
+    select, input[type="number"] {
       padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);
       background: var(--bg); color: var(--fg); font-family: var(--mono); font-size: 0.78rem;
+    }
+    input[type="number"] { width: 78px; }
+    textarea {
+      width: 100%; min-height: 92px; padding: 10px; border-radius: 8px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--fg);
+      font-size: 0.78rem; resize: vertical;
     }
     .primary-btn {
       font-family: var(--sans); font-size: 0.78rem; font-weight: 600; padding: 7px 12px;
       border-radius: 8px; border: none; background: var(--accent); color: var(--accent-fg); cursor: pointer;
     }
+    .sec-btn {
+      font-family: var(--mono); font-size: 0.72rem; padding: 5px 9px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--bg); color: var(--fg); cursor: pointer;
+    }
+    .sec-btn:hover { border-color: var(--accent); color: var(--accent); }
     .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 14px; }
     .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
     .stat-box {
       padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);
     }
     .stat-title { font-size: 0.72rem; color: var(--muted); }
-    .stat-num { font-family: var(--mono); font-size: 1.15rem; font-weight: 700; margin-top: 3px; }
+    .stat-num { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; margin-top: 3px; }
     .stat-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
     .c-err { color: var(--err); }
     .c-ok { color: var(--ok); }
@@ -147,6 +156,10 @@
       border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); cursor: pointer;
     }
     .mode-btn.active { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+    pre.out-pre {
+      margin: 10px 0 0; padding: 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--bg); font-size: 0.76rem; overflow-x: auto; white-space: pre-wrap;
+    }
     footer {
       margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border);
       font-size: 0.76rem; color: var(--muted); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
@@ -159,46 +172,54 @@
       <div>
         <div class="title-row">
           <h1>eproc</h1>
-          <span class="badge">v0.1.0 · C11/AVX2 · Apache-2.0</span>
+          <span class="badge">v0.1.0 · C11/Runtime-AVX2 · Apache-2.0</span>
+          <span id="wasm-badge" class="badge">Loading C11 WASM (72 KiB)…</span>
           <span class="badge ok">6/6 Gates · 42/42 Breaker PASS</span>
         </div>
         <p class="subtitle">
           Sub-microsecond anytime-valid statistics, crossing-free multi-rate online conformal calibration,
-          640-byte abelian fleet monoids, and Byzantine-safe multi-agent fusion. Zero runtime dependencies.
+          640-byte abelian fleet monoids, and Byzantine-safe multi-agent fusion. Zero runtime dependencies across
+          Python, C11/C++17, WebAssembly/JS/TS, Rust, Go, CLI, and MCP 2026-07-28.
         </p>
         <div class="links">
           <a href="https://github.com/pgg898200-ship-it/eproc">GitHub</a>
+          <a href="COMPARISON.md">COMPARISON.md</a>
+          <a href="MATHEMATICS.md">MATHEMATICS.md</a>
           <a href="llms.txt">llms.txt</a>
           <a href="llms-full.txt">llms-full.txt</a>
-          <a href="MATHEMATICS.md">MATHEMATICS.md</a>
           <a href="eproc_single.h">eproc_single.h</a>
+          <a href="eproc.wasm">eproc.wasm</a>
           <a href="SHA256SUMS">SHA256SUMS</a>
         </div>
       </div>
       <div class="kpis">
         <div class="kpi">
           <div class="kpi-label">Cold Import</div>
-          <div class="kpi-val">0.78 ms</div>
+          <div class="kpi-val">0.88 ms</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">E-Process</div>
-          <div class="kpi-val">27.5 ns</div>
+          <div class="kpi-label">E-Process C11</div>
+          <div class="kpi-val">26.7 ns</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Peak Speedup</div>
-          <div class="kpi-val accent">2,162×</div>
+          <div class="kpi-label">WASM Core</div>
+          <div class="kpi-val accent">72 KiB</div>
         </div>
       </div>
     </header>
 
     <div class="install-bar">
       <div class="cmd-box">
-        <div><span class="cmd-label">Python (self-contained C11 wheel, 0 deps)</span><code>pip install eproc</code></div>
+        <div><span class="cmd-label">Python (portable wheel + runtime AVX2)</span><code>pip install eproc</code></div>
         <button class="copy-btn" data-copy="pip install eproc">Copy</button>
       </div>
       <div class="cmd-box">
         <div><span class="cmd-label">Single-Header C11 / C++17 (0 malloc)</span><code>#include "eproc_single.h"</code></div>
         <button class="copy-btn" data-copy="#define EPROC_IMPLEMENTATION&#10;#include &quot;eproc_single.h&quot;">Copy</button>
+      </div>
+      <div class="cmd-box">
+        <div><span class="cmd-label">WebAssembly / JS / TS (0 Emscripten)</span><code>initEproc('./eproc.wasm')</code></div>
+        <button class="copy-btn" data-copy="import { initEproc, EProcess } from './eproc.mjs';&#10;await initEproc('./eproc.wasm');">Copy</button>
       </div>
       <div class="cmd-box">
         <div><span class="cmd-label">MCP 2026-07-28 Server (7 tools)</span><code>eproc mcp</code></div>
@@ -207,13 +228,74 @@
     </div>
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="peeking">1. Anytime-Valid Peeking Simulator</button>
-      <button class="tab-btn" data-tab="benchmarks">2. Verified [LIVE-CPU] Speedups &amp; Ladder</button>
-      <button class="tab-btn" data-tab="swarm">3. Byzantine &amp; Echo Swarm Simulator</button>
+      <button class="tab-btn active" data-tab="wasm-eval">1. Live C11 WASM Evaluator (Paste Data)</button>
+      <button class="tab-btn" data-tab="peeking">2. Anytime-Valid Peeking Simulator</button>
+      <button class="tab-btn" data-tab="benchmarks">3. Verified [LIVE-CPU] Speedups</button>
+      <button class="tab-btn" data-tab="swarm">4. Byzantine &amp; Echo Swarm Lab</button>
     </div>
 
-    <!-- TAB 1 -->
-    <section id="tab-peeking" class="panel active">
+    <!-- TAB 1: Real Compiled C11 WebAssembly Live Evaluator -->
+    <section id="tab-wasm-eval" class="panel active">
+      <div class="card">
+        <div class="controls">
+          <div>
+            <strong>Run the REAL C11 Core Compiled to WebAssembly Right in Your Browser</strong>
+            <div class="stat-sub">100% local execution in <code>eproc.wasm</code> (72 KiB, 0 server calls, bit-exact 640-byte wire compatibility with native C11/Python/Rust/Go).</div>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            <button class="sec-btn" id="preset-null">Preset: Null (p=0.50)</button>
+            <button class="sec-btn" id="preset-uplift">Preset: +0.15 Uplift</button>
+            <button class="sec-btn" id="preset-shock">Preset: Conformal 4× Shock</button>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="ctrl-group">
+            <label>Null μ₀ <input id="w-mu0" type="number" step="0.05" value="0.50" /></label>
+            <label>α <input id="w-alpha" type="number" step="0.01" min="0.001" max="0.5" value="0.05" /></label>
+            <label>Lower <input id="w-lo" type="number" step="0.5" value="0.0" /></label>
+            <label>Upper <input id="w-hi" type="number" step="0.5" value="1.0" /></label>
+            <label>Side
+              <select id="w-side">
+                <option value="upper" selected>upper (μ &gt; μ₀)</option>
+                <option value="lower">lower (μ &lt; μ₀)</option>
+                <option value="two_sided">two_sided (μ ≠ μ₀)</option>
+              </select>
+            </label>
+          </div>
+          <button id="w-run" class="primary-btn">Run C11 WASM Engine</button>
+        </div>
+
+        <textarea id="w-input" placeholder="Paste comma-, space-, or newline-separated numeric observations (e.g. eval scores 0/1 or continuous residuals)..."></textarea>
+
+        <div class="grid-4" style="margin-top:12px;">
+          <div class="stat-box">
+            <div class="stat-title">EProcess Verdict (Ville)</div>
+            <div id="w-verdict" class="stat-num">—</div>
+            <div id="w-eval-sub" class="stat-sub">e-value / anytime p</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">Always-Valid 95% EB-CS</div>
+            <div id="w-cs" class="stat-num">—</div>
+            <div id="w-cs-sub" class="stat-sub">Empirical-Bernstein CS</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">Conformal 90% / 95% Radii</div>
+            <div id="w-cp" class="stat-num">—</div>
+            <div id="w-cp-sub" class="stat-sub">5-rate crossing-free PAVA</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-title">C11 WASM Execution</div>
+            <div id="w-time" class="stat-num c-accent">—</div>
+            <div id="w-monoid" class="stat-sub">640 B wire digest</div>
+          </div>
+        </div>
+        <pre id="w-detail" class="out-pre">Click "Run C11 WASM Engine" or pick a preset to run EProcess + ConfidenceSequence + MultiRateConformal + 640-byte ConformalMonoid locally in WebAssembly.</pre>
+      </div>
+    </section>
+
+    <!-- TAB 2: Peeking Simulator -->
+    <section id="tab-peeking" class="panel">
       <div class="card">
         <div class="controls">
           <div class="ctrl-group">
@@ -265,7 +347,7 @@
       </div>
     </section>
 
-    <!-- TAB 2 -->
+    <!-- TAB 3: Verified Benchmarks -->
     <section id="tab-benchmarks" class="panel">
       <div class="card">
         <div class="controls">
@@ -285,26 +367,26 @@
         <strong style="display:block; margin-bottom:10px;">Engineering Optimization Ladder</strong>
         <div class="grid-2">
           <div class="stat-box">
-            <div class="bar-meta"><strong>1. Native CPython C-API (_native)</strong><span class="c-ok"><strong>59.2× faster</strong></span></div>
-            <div class="stat-sub"><code>eprocess_scalar</code>: 6,629 ns (ctypes) → <b>112.0 ns</b> · 0 deps · 0.78 ms cold import</div>
+            <div class="bar-meta"><strong>1. Native CPython C-API (_native)</strong><span class="c-ok"><strong>56× faster</strong></span></div>
+            <div class="stat-sub"><code>eprocess_scalar</code>: 6,629 ns (ctypes) → <b>118.5 ns</b> · 0 deps · 0.88 ms cold import</div>
           </div>
           <div class="stat-box">
-            <div class="bar-meta"><strong>2. Exact Gaussian Max-Entropy B&amp;B</strong><span class="c-ok"><strong>149.8× faster</strong></span></div>
-            <div class="stat-sub"><code>sift_voi_2048ch</code>: 1,648 µs → <b>11.0 µs</b> · 8,192-ch epoch 1,099 ms → <b>25.6 ms</b> (0.752 F1, 0 loud FA)</div>
+            <div class="bar-meta"><strong>2. Runtime CPUID AVX2 in Portable Wheels</strong><span class="c-ok"><strong>2.56× faster</strong></span></div>
+            <div class="stat-sub">Portable PyPI wheel <code>conformal_5rate</code>: 799.6 ns (scalar) → <b>311.9 ns</b> with 0 <code>-mavx2</code> flags &amp; 0-ULP identity</div>
           </div>
           <div class="stat-box">
-            <div class="bar-meta"><strong>3. AVX2 Single-Pass Shift + 4-Wide AgACI</strong><span class="c-ok"><strong>2.83× faster</strong></span></div>
-            <div class="stat-sub"><code>conformal_5rate_batch</code>: 896.5 ns → <b>316.8 ns</b> (3.16M ops/s, <b>273×</b> vs Python, 0 crossings)</div>
+            <div class="bar-meta"><strong>3. Exact Gaussian Max-Entropy B&amp;B</strong><span class="c-ok"><strong>161× faster</strong></span></div>
+            <div class="stat-sub"><code>sift_voi_2048ch</code>: 2,005 µs → <b>12.4 µs</b> · 8,192-ch firehose 0.752 F1 vs 0.100 naive (0 loud FA)</div>
           </div>
           <div class="stat-box">
-            <div class="bar-meta"><strong>4. Fixed-Share BOA + Page-CUSUM deg_e</strong><span class="c-ok"><strong>10.5× lower MSE</strong></span></div>
-            <div class="stat-sub"><code>SafeFuser</code> post-regime-shift MSE: 0.2983 → <b>0.0284</b> (-85.0% vs anchor; attack MSE <b>0.0220</b>)</div>
+            <div class="bar-meta"><strong>4. Slim Seqlock + Fixed-Share BOA</strong><span class="c-ok"><strong>58× faster</strong></span></div>
+            <div class="stat-sub"><code>SafeFuser</code> C11: 566 ns → <b>445.7 ns</b> (2.24M ops/s) · Attack MSE <b>0.0220</b> (-88.7% vs anchor, -48.8% vs median)</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- TAB 3 -->
+    <!-- TAB 4: Swarm Simulator -->
     <section id="tab-swarm" class="panel">
       <div class="card">
         <div class="controls">
@@ -353,12 +435,169 @@
     </section>
 
     <footer>
-      <span>Zero external CDN · Zero telemetry · Apache-2.0 License</span>
+      <span>Zero external CDN · Zero telemetry · Real 72 KiB C11 WebAssembly · Apache-2.0 License</span>
       <span>Reproduce locally: <code>make test &amp;&amp; python3 benchmarks/bench_suite.py</code></span>
     </footer>
   </div>
 
-  <script>
+  <script type="module">
+    let wasmApi = null;
+    const wasmBadge = document.getElementById('wasm-badge');
+
+    async function bootWasm() {
+      try {
+        const mod = await import('./eproc.mjs');
+        await mod.initEproc('./eproc.wasm');
+        wasmApi = mod;
+        wasmBadge.textContent = `C11 WASM Active · 72 KiB · ABI v${mod.abiVersion()}`;
+        wasmBadge.classList.add('ok');
+        loadPreset('uplift');
+      } catch (err) {
+        wasmBadge.textContent = 'WASM offline (open via HTTPS/HTTP)';
+        document.getElementById('w-detail').textContent =
+          `Note: Browser WebAssembly fetch requires HTTP/HTTPS (loaded live at https://pgg898200-ship-it.github.io/eproc/). (${err.message})`;
+      }
+    }
+
+    function parseNumbers(text) {
+      const nums = [];
+      for (const tok of text.split(/[\s,;]+/)) {
+        if (!tok) continue;
+        const v = Number(tok);
+        if (Number.isFinite(v)) nums.push(v);
+      }
+      return nums;
+    }
+
+    function toHexPrefix(bytes, n = 16) {
+      return Array.from(bytes.slice(0, n), b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function runWasmEvaluator() {
+      if (!wasmApi) return;
+      const vals = parseNumbers(document.getElementById('w-input').value);
+      if (vals.length === 0) {
+        document.getElementById('w-detail').textContent = 'Enter at least one finite number.';
+        return;
+      }
+      const mu0 = parseFloat(document.getElementById('w-mu0').value);
+      const alpha = parseFloat(document.getElementById('w-alpha').value);
+      const lo = parseFloat(document.getElementById('w-lo').value);
+      const hi = parseFloat(document.getElementById('w-hi').value);
+      const side = document.getElementById('w-side').value;
+
+      const t0 = performance.now();
+      let epRes = null, csRes = null, cpMeta = null, wire = null, q90m = 0;
+      let epErr = null;
+      const clampedVals = vals.map(v => Math.max(lo, Math.min(hi, v)));
+
+      try {
+        const ep = new wasmApi.EProcess({ mu0, alpha, lower: lo, upper: hi, side });
+        epRes = ep.updateBatch(clampedVals);
+        ep.free();
+      } catch (e) { epErr = e.message; }
+
+      try {
+        const cs = new wasmApi.ConfidenceSequence({ alpha, lower: lo, upper: hi, mode: 'eb' });
+        csRes = cs.updateBatch(clampedVals);
+        cs.free();
+      } catch (e) { /* ignore if bounds invalid */ }
+
+      const absScores = vals.map(v => Math.abs(v));
+      const cp = new wasmApi.MultiRateConformal({ alphas: [0.50, 0.20, 0.10, 0.05, 0.01], windowSize: 128, pidKi: 0.05 });
+      cpMeta = cp.updateBatch(absScores);
+      cp.free();
+
+      const mon = new wasmApi.ConformalMonoid(1.0);
+      mon.addBatch(absScores);
+      q90m = mon.quantile(0.90);
+      wire = mon.toBytes();
+      mon.free();
+      const dtUs = (performance.now() - t0) * 1000.0;
+
+      if (epRes) {
+        const vEl = document.getElementById('w-verdict');
+        vEl.textContent = epRes.rejected ? 'REJECT H0' : 'CONTINUE';
+        vEl.className = 'stat-num ' + (epRes.rejected ? 'c-ok' : 'c-accent');
+        document.getElementById('w-eval-sub').textContent =
+          `e=${epRes.eValue > 1e5 ? epRes.eValue.toExponential(2) : epRes.eValue.toFixed(2)} · p=${epRes.pValue.toExponential(2)} (n=${epRes.n})`;
+      } else {
+        document.getElementById('w-verdict').textContent = 'Invalid bounds';
+        document.getElementById('w-eval-sub').textContent = epErr || '';
+      }
+
+      if (csRes) {
+        document.getElementById('w-cs').textContent = `[${csRes.low.toFixed(3)}, ${csRes.high.toFixed(3)}]`;
+        document.getElementById('w-cs-sub').textContent = `mean=${csRes.mean.toFixed(4)} · width=${csRes.width.toFixed(4)}`;
+      }
+
+      document.getElementById('w-cp').textContent = `${cpMeta.quantiles[2].toFixed(3)} / ${cpMeta.quantiles[3].toFixed(3)}`;
+      document.getElementById('w-cp-sub').textContent = `cov90=${(cpMeta.empCoverage[2]*100).toFixed(1)}% · 0 crossings`;
+      document.getElementById('w-time').textContent = `${dtUs.toFixed(0)} µs`;
+      document.getElementById('w-monoid').textContent = `640 B · q90=${q90m.toFixed(3)}`;
+
+      document.getElementById('w-detail').textContent =
+`Engine: eproc.wasm (72 KiB compiled C11 core · ABI v${wasmApi.abiVersion()} · heap live: ${wasmApi.heapUsed()} B)
+Input:  ${vals.length} observations (total WASM wall time: ${dtUs.toFixed(1)} µs)
+EProcess (mu0=${mu0}, alpha=${alpha}, [${lo}, ${hi}], ${side}):
+  ${epRes ? `verdict=${epRes.rejected ? 'REJECT' : 'CONTINUE'} | e_value=${epRes.eValue.toPrecision(6)} | anytime_p=${epRes.pValue.toPrecision(5)} | mean=${epRes.mean.toFixed(5)}` : epErr}
+ConfidenceSequence (EB, alpha=${alpha}):
+  ${csRes ? `[${csRes.low.toFixed(5)}, ${csRes.high.toFixed(5)}] (width=${csRes.width.toFixed(5)})` : 'n/a'}
+MultiRateConformal (50% / 80% / 90% / 95% / 99% non-crossing quantiles on |x|):
+  q = [${cpMeta.quantiles.map(x => x.toFixed(4)).join(', ')}]
+  emp_cov = [${cpMeta.empCoverage.map(x => (x*100).toFixed(1) + '%').join(', ')}]
+ConformalMonoid (fixed ${wire.length} bytes wire payload, bit-exact across C11/Python/Rust/Go/WASM):
+  q90 = ${q90m.toFixed(5)} | wire[0..16] = 0x${toHexPrefix(wire, 16)}…`;
+    }
+
+    function mulberry32(seed) {
+      let a = seed >>> 0;
+      return function() {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function loadPreset(kind) {
+      const rng = mulberry32(kind === 'null' ? 101 : (kind === 'uplift' ? 202 : 303));
+      const arr = [];
+      if (kind === 'null') {
+        document.getElementById('w-mu0').value = '0.50';
+        document.getElementById('w-lo').value = '0.0';
+        document.getElementById('w-hi').value = '1.0';
+        document.getElementById('w-side').value = 'upper';
+        for (let i = 0; i < 200; i++) arr.push(rng() < 0.50 ? 1 : 0);
+      } else if (kind === 'uplift') {
+        document.getElementById('w-mu0').value = '0.50';
+        document.getElementById('w-lo').value = '0.0';
+        document.getElementById('w-hi').value = '1.0';
+        document.getElementById('w-side').value = 'upper';
+        for (let i = 0; i < 150; i++) arr.push(rng() < 0.66 ? 1 : 0);
+      } else {
+        document.getElementById('w-mu0').value = '1.0';
+        document.getElementById('w-lo').value = '0.0';
+        document.getElementById('w-hi').value = '15.0';
+        document.getElementById('w-side').value = 'upper';
+        for (let i = 0; i < 300; i++) {
+          const u1 = Math.max(1e-9, rng()), u2 = rng();
+          const z = Math.abs(Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2));
+          arr.push(Number((i < 150 ? z : 4.0 * z).toFixed(3)));
+        }
+      }
+      document.getElementById('w-input').value = arr.join(', ');
+      runWasmEvaluator();
+    }
+
+    document.getElementById('preset-null').addEventListener('click', () => loadPreset('null'));
+    document.getElementById('preset-uplift').addEventListener('click', () => loadPreset('uplift'));
+    document.getElementById('preset-shock').addEventListener('click', () => loadPreset('shock'));
+    document.getElementById('w-run').addEventListener('click', runWasmEvaluator);
+
+    bootWasm();
+
+    // ---- Shared UI & Simulators ----
     function cssVar(name, fallback) {
       return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
     }
@@ -384,16 +623,6 @@
         if (target === 'swarm') drawSwarm();
       });
     });
-
-    function mulberry32(seed) {
-      let a = seed >>> 0;
-      return function() {
-        a |= 0; a = (a + 0x6D2B79F5) | 0;
-        let t = Math.imul(a ^ (a >>> 15), 1 | a);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      };
-    }
 
     let peekSeed = 2026, lastPeekPaths = [], lastPeekThresh = Math.log(20);
     function runPeekingSim() {
@@ -507,27 +736,27 @@
 
     const BENCH_DATA = {
       python: [
-        { name: 'ConformalMonoid.subtract (LOO)', ns: 267.8, x: 2161.7 },
-        { name: 'MultiRateConformal (5-rate batch)', ns: 316.8, x: 273.0 },
-        { name: 'MultiRateConformal (5-rate scalar)', ns: 446.3, x: 193.4 },
-        { name: 'SiftVOISelector (2,048 ch B&B)', ns: 11004, x: 186.2 },
-        { name: 'OnlineRLSSampler (d=16)', ns: 230.1, x: 113.8 },
-        { name: 'SafeFuser (8 experts + Seqlock)', ns: 614.0, x: 41.6 },
-        { name: 'ConfidenceSequence (EB scalar)', ns: 121.2, x: 21.3 },
-        { name: 'EProcess (ONS scalar / batch 27.5ns)', ns: 112.0, x: 19.0 },
-        { name: 'VarOptSampler (k=256 HT)', ns: 247.8, x: 8.1 },
-        { name: 'EchoPool (dedup + reliability)', ns: 205.9, x: 7.6 },
+        { name: 'ConformalMonoid.subtract (exact LOO)', ns: 285.8, x: 2015.0 },
+        { name: 'MultiRateConformal (5-rate batch)', ns: 353.5, x: 236.7 },
+        { name: 'MultiRateConformal (5-rate scalar)', ns: 526.4, x: 161.8 },
+        { name: 'SiftVOISelector (2,048 ch B&B)', ns: 12423.4, x: 161.4 },
+        { name: 'OnlineRLSSampler (d=16)', ns: 221.3, x: 105.8 },
+        { name: 'SafeFuser (8 experts + Slim Seqlock)', ns: 569.9, x: 45.3 },
+        { name: 'ConfidenceSequence (EB scalar)', ns: 120.0, x: 21.8 },
+        { name: 'EProcess (ONS scalar / batch 27.6ns)', ns: 118.5, x: 21.4 },
+        { name: 'VarOptSampler (k=256 HT)', ns: 250.2, x: 7.8 },
+        { name: 'EchoPool (dedup + reliability)', ns: 201.6, x: 7.7 },
       ],
       c11: [
-        { name: 'MultiRateConformal (5-rate AgACI)', ns: 315.3, x: 273.8 },
-        { name: 'OnlineRLSSampler (d=16)', ns: 118.6, x: 220.7 },
-        { name: 'SiftVOISelector (2,048ch sel+obs)', ns: 25940, x: 79.0 },
-        { name: 'EProcess (ONS betting)', ns: 30.1, x: 70.6 },
-        { name: 'EchoPool (dedup + reliability)', ns: 30.8, x: 51.0 },
-        { name: 'SafeFuser (8 experts + Seqlock)', ns: 566.0, x: 45.1 },
-        { name: 'ConformalMonoid.merge (640B AVX2)', ns: 38.0, x: 38.5 },
-        { name: 'ConfidenceSequence (EB)', ns: 67.9, x: 38.0 },
-        { name: 'VarOptSampler (k=256 HT)', ns: 134.0, x: 14.9 },
+        { name: 'MultiRateConformal (5-rate AgACI)', ns: 350.1, x: 243.2 },
+        { name: 'OnlineRLSSampler (d=16)', ns: 114.9, x: 203.8 },
+        { name: 'EProcess (ONS betting)', ns: 26.7, x: 95.0 },
+        { name: 'SiftVOISelector (2,048ch sel+obs)', ns: 26328.0, x: 76.2 },
+        { name: 'EchoPool (dedup + reliability)', ns: 26.6, x: 58.4 },
+        { name: 'SafeFuser (8 experts + Slim Seqlock)', ns: 445.7, x: 58.0 },
+        { name: 'ConformalMonoid.merge (640B AVX2)', ns: 34.2, x: 47.1 },
+        { name: 'ConfidenceSequence (EB)', ns: 62.8, x: 41.7 },
+        { name: 'VarOptSampler (k=256 HT)', ns: 133.1, x: 14.6 },
       ]
     };
 

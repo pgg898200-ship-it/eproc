@@ -40,6 +40,16 @@ _LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     "RLSStepResult": (".subsample", "RLSStepResult"),
     "SiftVOISelector": (".subsample", "SiftVOISelector"),
     "SiftAction": (".subsample", "SiftAction"),
+    # Drop-in eval/CI/sklearn/fleet adapters
+    "EvalGate": (".adapters", "EvalGate"),
+    "EvalGateSummary": (".adapters", "EvalGateSummary"),
+    "PairedEvalGate": (".adapters", "PairedEvalGate"),
+    "ConformalWrapper": (".adapters", "ConformalWrapper"),
+    "IntervalResult": (".adapters", "IntervalResult"),
+    "FleetCalibrationResult": (".adapters", "FleetCalibrationResult"),
+    "assert_eprocess_uplift": (".adapters", "assert_eprocess_uplift"),
+    "assert_no_regression": (".adapters", "assert_no_regression"),
+    "fleet_calibrate": (".adapters", "fleet_calibrate"),
     # Runtime inspection helpers
     "abi_version": ("._ffi", "abi_version"),
     "simd_flags": ("._ffi", "simd_flags"),

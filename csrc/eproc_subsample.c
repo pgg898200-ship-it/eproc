@@ -4,16 +4,13 @@
 
 #include "eproc.h"
 #include "eproc_internal.h"
+#include "eproc_simd.h"
 
 #include <float.h>
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-
-#if defined(__AVX2__)
-#include <immintrin.h>
-#endif
 
 /* ============================================================================
  * 4A. COHEN-2011 VARIANCE-OPTIMAL WEIGHTED RESERVOIR SAMPLER (VAROPT)
@@ -316,8 +313,49 @@ double eproc_varopt_estimate_mean(const eproc_varopt_t *vo) {
  * 4B. ONLINE RIDGE LEVERAGE SCORE (RLS) CAUSAL SUBSAMPLER (AVX2 BIT-EXACT)
  * ============================================================================ */
 
-static double eproc_dot_4lane(const double *a, const double *b, uint32_t n) {
-#if defined(__AVX2__)
+#if !EPROC_STATIC_AVX2
+static inline double eproc_dot_4lane_scalar(const double *a, const double *b, uint32_t n) {
+    double lane[4] = {0.0, 0.0, 0.0, 0.0};
+    uint32_t j = 0;
+    for (; j + 4U <= n; j += 4U) {
+        lane[0] += a[j + 0U] * b[j + 0U];
+        lane[1] += a[j + 1U] * b[j + 1U];
+        lane[2] += a[j + 2U] * b[j + 2U];
+        lane[3] += a[j + 3U] * b[j + 3U];
+    }
+    double sum = (lane[0] + lane[1]) + (lane[2] + lane[3]);
+    for (; j < n; ++j) {
+        sum += a[j] * b[j];
+    }
+    return sum;
+}
+
+static double eproc_rls_matvec_scalar(const double *inv_a,
+                                      const double *x,
+                                      double *v,
+                                      uint32_t d) {
+    for (uint32_t i = 0; i < d; ++i) {
+        v[i] = eproc_dot_4lane_scalar(inv_a + (size_t)i * d, x, d);
+    }
+    return eproc_dot_4lane_scalar(x, v, d);
+}
+
+static void eproc_rls_rank1_sub_scalar(double *inv_a, const double *wv, uint32_t d) {
+    for (uint32_t i = 0; i < d; ++i) {
+        double *row = inv_a + (size_t)i * d;
+        const double wi = wv[i];
+        for (uint32_t j = 0; j < d; ++j) {
+            row[j] -= wi * wv[j];
+        }
+        if (row[i] < 0.0) {
+            row[i] = 0.0;
+        }
+    }
+}
+#endif
+
+#if EPROC_BUILD_AVX2
+EPROC_AVX2_INLINE double eproc_dot_4lane_avx2(const double *a, const double *b, uint32_t n) {
     __m256d vacc = _mm256_setzero_pd();
     uint32_t j = 0;
     for (; j + 4U <= n; j += 4U) {
@@ -332,29 +370,25 @@ static double eproc_dot_4lane(const double *a, const double *b, uint32_t n) {
         sum += a[j] * b[j];
     }
     return sum;
-#else
-    double lane[4] = {0.0, 0.0, 0.0, 0.0};
-    uint32_t j = 0;
-    for (; j + 4U <= n; j += 4U) {
-        lane[0] += a[j + 0U] * b[j + 0U];
-        lane[1] += a[j + 1U] * b[j + 1U];
-        lane[2] += a[j + 2U] * b[j + 2U];
-        lane[3] += a[j + 3U] * b[j + 3U];
-    }
-    double sum = (lane[0] + lane[1]) + (lane[2] + lane[3]);
-    for (; j < n; ++j) {
-        sum += a[j] * b[j];
-    }
-    return sum;
-#endif
 }
 
-static void eproc_rls_rank1_sub(double *inv_a, const double *wv, uint32_t d) {
+EPROC_TARGET_AVX2
+static double eproc_rls_matvec_avx2(const double *inv_a,
+                                    const double *x,
+                                    double *v,
+                                    uint32_t d) {
+    for (uint32_t i = 0; i < d; ++i) {
+        v[i] = eproc_dot_4lane_avx2(inv_a + (size_t)i * d, x, d);
+    }
+    return eproc_dot_4lane_avx2(x, v, d);
+}
+
+EPROC_TARGET_AVX2
+static void eproc_rls_rank1_sub_avx2(double *inv_a, const double *wv, uint32_t d) {
     for (uint32_t i = 0; i < d; ++i) {
         double *row = inv_a + (size_t)i * d;
         const double wi = wv[i];
         uint32_t j = 0;
-#if defined(__AVX2__)
         const __m256d vwi = _mm256_set1_pd(wi);
         for (; j + 4U <= d; j += 4U) {
             __m256d vr = _mm256_loadu_pd(row + j);
@@ -362,7 +396,6 @@ static void eproc_rls_rank1_sub(double *inv_a, const double *wv, uint32_t d) {
             vr = _mm256_sub_pd(vr, _mm256_mul_pd(vwi, vw));
             _mm256_storeu_pd(row + j, vr);
         }
-#endif
         for (; j < d; ++j) {
             row[j] -= wi * wv[j];
         }
@@ -370,6 +403,19 @@ static void eproc_rls_rank1_sub(double *inv_a, const double *wv, uint32_t d) {
             row[i] = 0.0;
         }
     }
+}
+#endif
+
+static inline void eproc_rls_rank1_sub(double *inv_a, const double *wv, uint32_t d) {
+#if EPROC_BUILD_AVX2
+    if (eproc_use_avx2()) {
+        eproc_rls_rank1_sub_avx2(inv_a, wv, d);
+        return;
+    }
+#endif
+#if !EPROC_STATIC_AVX2
+    eproc_rls_rank1_sub_scalar(inv_a, wv, d);
+#endif
 }
 
 int eproc_rls_init(eproc_rls_t *rls,
@@ -431,6 +477,7 @@ int eproc_rls_step(eproc_rls_t *rls, const double *x, eproc_rls_out_t *out) {
     double v[EPROC_RLS_MAX_D];
     int scaled = 0;
     double scale = 1.0;
+    double lev_base = 0.0;
 
     /* W05 fix: treat subnormal / ultra-tiny vectors (< 1e-150) as exact zero leverage
      * so 1.0 / max_abs NEVER overflows to +Inf and produces 0 * +Inf = NaN. */
@@ -439,24 +486,26 @@ int eproc_rls_step(eproc_rls_t *rls, const double *x, eproc_rls_out_t *out) {
         for (uint32_t i = 0; i < d; ++i) {
             v[i] = 0.0;
         }
-    } else if (max_abs > 1e100 || max_abs < 1e-100) {
-        scaled = 1;
-        scale = max_abs;
-        for (uint32_t i = 0; i < d; ++i) {
-            x_scaled[i] = x[i] / scale;
-        }
-        for (uint32_t i = 0; i < d; ++i) {
-            v[i] = eproc_dot_4lane(rls->inv_a + (size_t)i * d, x_scaled, d);
-        }
     } else {
-        for (uint32_t i = 0; i < d; ++i) {
-            v[i] = eproc_dot_4lane(rls->inv_a + (size_t)i * d, x, d);
+        const double *x_use = x;
+        if (max_abs > 1e100 || max_abs < 1e-100) {
+            scaled = 1;
+            scale = max_abs;
+            for (uint32_t i = 0; i < d; ++i) {
+                x_scaled[i] = x[i] / scale;
+            }
+            x_use = x_scaled;
         }
-    }
-
-    double lev_base = 0.0;
-    if (max_abs > 0.0) {
-        lev_base = eproc_dot_4lane(scaled ? x_scaled : x, v, d);
+#if EPROC_BUILD_AVX2
+        if (eproc_use_avx2()) {
+            lev_base = eproc_rls_matvec_avx2(rls->inv_a, x_use, v, d);
+        } else
+#endif
+        {
+#if !EPROC_STATIC_AVX2
+            lev_base = eproc_rls_matvec_scalar(rls->inv_a, x_use, v, d);
+#endif
+        }
         if (!isfinite(lev_base) || lev_base < 0.0) {
             lev_base = 0.0;
         }
@@ -787,6 +836,72 @@ static inline void eproc_sift_eval_channel(uint32_t c,
     }
 }
 
+#if EPROC_BUILD_AVX2
+EPROC_TARGET_AVX2
+static void eproc_sift_scan_channels_avx2(const eproc_sift_t *sf,
+                                          uint32_t total_ch,
+                                          double noise_sd,
+                                          double coeff_ub,
+                                          double abs_mu,
+                                          double mu2,
+                                          double sqrt_ticks,
+                                          double ticks_d,
+                                          int ok_chan,
+                                          double inv_c_chan,
+                                          int ok_tick,
+                                          double inv_c_tick,
+                                          double *best_score,
+                                          int32_t *best_type,
+                                          uint32_t *best_target) {
+    const __m256d v_one = _mm256_set1_pd(1.0);
+    const __m256d v_coeff = _mm256_set1_pd(coeff_ub);
+    const __m256d v_min_ns2 = _mm256_set1_pd(1e-24);
+    __m256d v_best = _mm256_set1_pd(*best_score);
+
+    uint32_t c = 0U;
+    for (; c + 4U <= total_ch; c += 4U) {
+        const __m256d vp = _mm256_loadu_pd(sf->chan_prob + c);
+        const __m256d vns = _mm256_loadu_pd(sf->chan_noise_scale + c);
+        const __m256d vpq = _mm256_mul_pd(vp, _mm256_sub_pd(v_one, vp));
+        const __m256d vns2 = _mm256_max_pd(_mm256_mul_pd(vns, vns), v_min_ns2);
+        /* Division-free sound B&B check: coeff_ub * p*(1-p) > best_score * ns^2 */
+        const __m256d vlhs = _mm256_mul_pd(v_coeff, vpq);
+        const __m256d vrhs = _mm256_mul_pd(v_best, vns2);
+        const int mask = _mm256_movemask_pd(_mm256_cmp_pd(vlhs, vrhs, _CMP_GT_OQ));
+        if (mask == 0) {
+            continue;
+        }
+        for (uint32_t lane = 0U; lane < 4U; ++lane) {
+            if ((mask & (1 << lane)) == 0) {
+                continue;
+            }
+            const uint32_t idx = c + lane;
+            const double prev_b = *best_score;
+            eproc_sift_eval_channel(idx, sf->chan_prob[idx],
+                                    noise_sd * sf->chan_noise_scale[idx],
+                                    abs_mu, mu2, sqrt_ticks, ticks_d,
+                                    ok_chan, inv_c_chan, ok_tick, inv_c_tick,
+                                    best_score, best_type, best_target);
+            if (*best_score > prev_b) {
+                v_best = _mm256_set1_pd(*best_score);
+            }
+        }
+    }
+    for (; c < total_ch; ++c) {
+        const double p_c = sf->chan_prob[c];
+        const double ns = sf->chan_noise_scale[c];
+        const double ns2 = fmax(ns * ns, 1e-24);
+        if (coeff_ub * (p_c * (1.0 - p_c)) <= (*best_score) * ns2) {
+            continue;
+        }
+        eproc_sift_eval_channel(c, p_c, noise_sd * ns,
+                                abs_mu, mu2, sqrt_ticks, ticks_d,
+                                ok_chan, inv_c_chan, ok_tick, inv_c_tick,
+                                best_score, best_type, best_target);
+    }
+}
+#endif
+
 int eproc_sift_select_next(const eproc_sift_t *sf,
                            double cost_site,
                            double cost_channel,
@@ -900,52 +1015,29 @@ int eproc_sift_select_next(const eproc_sift_t *sf,
          * max(ub1, ub2) <= (0.5 * mu^2 * eff_inv / noise_sd^2) * p*(1-p) / chan_noise_scale^2 */
         const double coeff_ub = 0.5 * (mu2 / ns_var) * eff_inv * (1.0 + 1e-12);
 
-        uint32_t c = 0U;
-#if defined(__AVX2__)
-        const __m256d v_one = _mm256_set1_pd(1.0);
-        const __m256d v_coeff = _mm256_set1_pd(coeff_ub);
-        const __m256d v_min_ns2 = _mm256_set1_pd(1e-24);
-        __m256d v_best = _mm256_set1_pd(best_score);
-
-        for (; c + 4U <= total_ch; c += 4U) {
-            const __m256d vp = _mm256_loadu_pd(sf->chan_prob + c);
-            const __m256d vns = _mm256_loadu_pd(sf->chan_noise_scale + c);
-            const __m256d vpq = _mm256_mul_pd(vp, _mm256_sub_pd(v_one, vp));
-            const __m256d vns2 = _mm256_max_pd(_mm256_mul_pd(vns, vns), v_min_ns2);
-            const __m256d vub = _mm256_div_pd(_mm256_mul_pd(v_coeff, vpq), vns2);
-            const int mask = _mm256_movemask_pd(_mm256_cmp_pd(vub, v_best, _CMP_GT_OQ));
-            if (mask == 0) {
-                continue;
-            }
-            for (uint32_t lane = 0U; lane < 4U; ++lane) {
-                if ((mask & (1 << lane)) == 0) {
+#if EPROC_BUILD_AVX2
+        if (eproc_use_avx2()) {
+            eproc_sift_scan_channels_avx2(sf, total_ch, noise_sd, coeff_ub,
+                                          abs_mu, mu2, sqrt_ticks, ticks_d,
+                                          ok_chan, inv_c_chan, ok_tick, inv_c_tick,
+                                          &best_score, &best_type, &best_target);
+        } else
+#endif
+        {
+#if !EPROC_STATIC_AVX2
+            for (uint32_t c = 0U; c < total_ch; ++c) {
+                const double p_c = sf->chan_prob[c];
+                const double ns = sf->chan_noise_scale[c];
+                const double ns2 = fmax(ns * ns, 1e-24);
+                if (coeff_ub * (p_c * (1.0 - p_c)) <= best_score * ns2) {
                     continue;
                 }
-                const uint32_t idx = c + lane;
-                const double prev_b = best_score;
-                eproc_sift_eval_channel(idx, sf->chan_prob[idx],
-                                        noise_sd * sf->chan_noise_scale[idx],
+                eproc_sift_eval_channel(c, p_c, noise_sd * ns,
                                         abs_mu, mu2, sqrt_ticks, ticks_d,
                                         ok_chan, inv_c_chan, ok_tick, inv_c_tick,
                                         &best_score, &best_type, &best_target);
-                if (best_score > prev_b) {
-                    v_best = _mm256_set1_pd(best_score);
-                }
             }
-        }
 #endif
-        for (; c < total_ch; ++c) {
-            const double p_c = sf->chan_prob[c];
-            const double ns = sf->chan_noise_scale[c];
-            const double ns2 = fmax(ns * ns, 1e-24);
-            const double ub = (coeff_ub * (p_c * (1.0 - p_c))) / ns2;
-            if (ub <= best_score) {
-                continue;
-            }
-            eproc_sift_eval_channel(c, p_c, noise_sd * ns,
-                                    abs_mu, mu2, sqrt_ticks, ticks_d,
-                                    ok_chan, inv_c_chan, ok_tick, inv_c_tick,
-                                    &best_score, &best_type, &best_target);
         }
     }
 
@@ -965,9 +1057,9 @@ uint32_t eproc_abi_version(void) {
 
 uint32_t eproc_simd_flags(void) {
     uint32_t flags = 0U;
-#if defined(__AVX2__)
-    flags |= 1U;
-#endif
+    if (eproc_use_avx2()) {
+        flags |= 1U;
+    }
 #if defined(__FMA__)
     flags |= 2U;
 #endif

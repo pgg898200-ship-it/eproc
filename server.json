@@ -1,0 +1,67 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.pgg898200-ship-it/eproc",
+  "title": "eproc",
+  "description": "Sub-microsecond anytime-valid online statistical inference, multi-rate crossing-free conformal calibration, 640-byte distributed fleet monoids, and Byzantine-safe multi-agent fusion (zero-dependency C11 + Python stdio MCP server).",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "websiteUrl": "https://pgg898200-ship-it.github.io/eproc/",
+  "repository": {
+    "url": "https://github.com/pgg898200-ship-it/eproc",
+    "source": "github"
+  },
+  "protocolVersion": "2026-07-28",
+  "supportedProtocolVersions": [
+    "2026-07-28",
+    "2025-11-25",
+    "2025-06-18",
+    "2025-03-26",
+    "2024-11-05"
+  ],
+  "packages": [
+    {
+      "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
+      "identifier": "eproc",
+      "version": "0.1.0",
+      "runtimeHint": "uvx",
+      "command": "eproc-mcp",
+      "args": [],
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [],
+      "environmentVariables": []
+    }
+  ],
+  "tools": [
+    {
+      "name": "eproc_etest",
+      "description": "Anytime-valid ONS betting e-process hypothesis test for bounded streams with Ville inequality safety under continuous peeking and optional stateful session_id."
+    },
+    {
+      "name": "eproc_confidence_sequence",
+      "description": "Anytime-valid O(1) Empirical-Bernstein or Normal-Mixture confidence sequence with running-intersection tightening."
+    },
+    {
+      "name": "eproc_race",
+      "description": "Anytime-valid multi-arm agent/model racer with automatic early elimination and FWER control."
+    },
+    {
+      "name": "eproc_conformal",
+      "description": "Multi-rate crossing-free AgACI + Conformal PID online interval calibrator for up to 5 simultaneous coverage levels."
+    },
+    {
+      "name": "eproc_cmonoid_merge",
+      "description": "Bit-exact associative and commutative distributed 640-byte conformal monoid merge and leave-one-out subtraction."
+    },
+    {
+      "name": "eproc_safe_fuse",
+      "description": "Byzantine-safe Bernstein Online Aggregation (BOA) with 3-gate Ville e-process non-inferiority fallback and lock-free seqlocked weights."
+    },
+    {
+      "name": "eproc_echopool",
+      "description": "Provenance-deduplicated multi-agent evidence pool with Beta-Bernoulli peer reliability tracking."
+    }
+  ]
+}

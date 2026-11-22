@@ -4,15 +4,12 @@
 
 #include "eproc.h"
 #include "eproc_internal.h"
+#include "eproc_simd.h"
 
 #include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
-
-#if defined(__AVX2__)
-#include <immintrin.h>
-#endif
 
 EPROC_STATIC_ASSERT(sizeof(eproc_cmonoid_t) == 640, "eproc_cmonoid_t must be exactly 640 bytes");
 
@@ -54,8 +51,8 @@ EPROC_ALWAYS_INLINE double eproc_sorted_quantile(const double *sorted, uint32_t 
 
 /* 4-wide bit-exact 1/sqrt(x) for x >= 1.0 using 64-bit IEEE magic + 2 Newton-Raphson steps
  * (error < 1e-7, ZERO vdivpd, ZERO vsqrtpd, 0-ULP AVX2/scalar identical). */
-#if defined(__AVX2__)
-EPROC_ALWAYS_INLINE __m256d eproc_rsqrt4_avx2(__m256d vx) {
+#if EPROC_BUILD_AVX2
+EPROC_AVX2_INLINE __m256d eproc_rsqrt4_avx2(__m256d vx) {
     const __m256d half_x = _mm256_mul_pd(_mm256_set1_pd(0.5), vx);
     const __m256d three_half = _mm256_set1_pd(1.5);
     const __m256i magic = _mm256_set1_epi64x(0x5fe6eb50c7b537a9LL);
@@ -68,7 +65,7 @@ EPROC_ALWAYS_INLINE __m256d eproc_rsqrt4_avx2(__m256d vx) {
 }
 
 /* 4-wide bit-exact exp(x) for pre-clamped x in [-50.0, 0.0] (degree-5 Estrin, 0-ULP identical) */
-EPROC_ALWAYS_INLINE __m256d eproc_exp4_neg50_clamped_avx2(__m256d vx) {
+EPROC_AVX2_INLINE __m256d eproc_exp4_neg50_clamped_avx2(__m256d vx) {
     static const double INV_LN2 = 1.44269504088896340736;
     static const double LN2_VAL = 0.69314718055994530942;
     static const double C5      = 1.0 / 120.0;
@@ -97,13 +94,13 @@ EPROC_ALWAYS_INLINE __m256d eproc_exp4_neg50_clamped_avx2(__m256d vx) {
     return _mm256_mul_pd(poly, _mm256_castsi256_pd(exp_bits));
 }
 
-EPROC_ALWAYS_INLINE __m256d eproc_exp4_neg50_avx2(__m256d vx) {
+EPROC_AVX2_INLINE __m256d eproc_exp4_neg50_avx2(__m256d vx) {
     vx = _mm256_max_pd(vx, _mm256_set1_pd(-50.0));
     vx = _mm256_min_pd(vx, _mm256_setzero_pd());
     return eproc_exp4_neg50_clamped_avx2(vx);
 }
 
-EPROC_ALWAYS_INLINE double eproc_hsum4_avx2(__m256d v) {
+EPROC_AVX2_INLINE double eproc_hsum4_avx2(__m256d v) {
     /* Deterministic pairwise sum: (v[0] + v[1]) + (v[2] + v[3]) matching scalar */
     const __m128d lo = _mm256_castpd256_pd128(v);
     const __m128d hi = _mm256_extractf128_pd(v, 1);
@@ -113,10 +110,10 @@ EPROC_ALWAYS_INLINE double eproc_hsum4_avx2(__m256d v) {
 }
 
 /* Fast L1 scalar-indexed 4-expert sorted quantile load for pre-clamped alpha in [0, 1]. */
-EPROC_ALWAYS_INLINE __m256d eproc_sorted_quantile4_avx2(const double *sorted,
-                                                        __m256d v_len_p1,
-                                                        __m256d v_len_m1,
-                                                        __m256d valpha) {
+EPROC_AVX2_INLINE __m256d eproc_sorted_quantile4_avx2(const double *sorted,
+                                                      __m256d v_len_p1,
+                                                      __m256d v_len_m1,
+                                                      __m256d valpha) {
     const __m256d v_zero = _mm256_setzero_pd();
     const __m256d v_one = _mm256_set1_pd(1.0);
     const __m256d vpos = _mm256_mul_pd(_mm256_sub_pd(v_one, valpha), v_len_p1);
@@ -176,8 +173,8 @@ EPROC_ALWAYS_INLINE double eproc_tanh_fast_scalar(double z) {
     return (z >= 0.0) ? mag : -mag;
 }
 
-EPROC_ALWAYS_INLINE void eproc_tanh_rates(const double *z, double *out, uint32_t n) {
-#if defined(__AVX2__)
+#if EPROC_BUILD_AVX2
+EPROC_AVX2_INLINE void eproc_tanh_rates_avx2(const double *z, double *out, uint32_t n) {
     if (n >= 4U) {
         const __m256d vz = _mm256_loadu_pd(z);
         const __m256d sign_mask = _mm256_set1_pd(-0.0);
@@ -192,11 +189,19 @@ EPROC_ALWAYS_INLINE void eproc_tanh_rates(const double *z, double *out, uint32_t
         }
         return;
     }
-#endif
     for (uint32_t i = 0; i < n; ++i) {
         out[i] = eproc_tanh_fast_scalar(z[i]);
     }
 }
+#endif
+
+#if !EPROC_STATIC_AVX2
+EPROC_ALWAYS_INLINE void eproc_tanh_rates_scalar(const double *z, double *out, uint32_t n) {
+    for (uint32_t i = 0; i < n; ++i) {
+        out[i] = eproc_tanh_fast_scalar(z[i]);
+    }
+}
+#endif
 
 /* Exact overflow-safe L2-optimal PAVA isotonic projection for non-decreasing q[0..n-1] */
 EPROC_ALWAYS_INLINE void eproc_pava_nondecreasing(double *q, uint32_t n) {
@@ -259,8 +264,8 @@ EPROC_ALWAYS_INLINE uint32_t eproc_lower_bound(const double *sorted, uint32_t le
 }
 
 /* Inline 8-double AVX2 shift helpers (prevents GCC memmove@plt + vzeroupper substitution) */
-EPROC_ALWAYS_INLINE void eproc_shift_right1(double *arr, uint32_t start, uint32_t count) {
-#if defined(__AVX2__)
+#if EPROC_BUILD_AVX2
+EPROC_AVX2_INLINE void eproc_shift_right1_avx2(double *arr, uint32_t start, uint32_t count) {
     uint32_t rem = count;
     while (rem >= 8U) {
         rem -= 8U;
@@ -284,15 +289,9 @@ EPROC_ALWAYS_INLINE void eproc_shift_right1(double *arr, uint32_t start, uint32_
     } else if (rem == 1U) {
         arr[start + 1U] = arr[start];
     }
-#else
-    if (count > 0U) {
-        memmove(&arr[start + 1U], &arr[start], count * sizeof(double));
-    }
-#endif
 }
 
-EPROC_ALWAYS_INLINE void eproc_shift_left1(double *arr, uint32_t dst_start, uint32_t count) {
-#if defined(__AVX2__)
+EPROC_AVX2_INLINE void eproc_shift_left1_avx2(double *arr, uint32_t dst_start, uint32_t count) {
     uint32_t i = 0U;
     for (; i + 8U <= count; i += 8U) {
         __m256d vlo = _mm256_loadu_pd(arr + dst_start + i + 1U);
@@ -316,15 +315,10 @@ EPROC_ALWAYS_INLINE void eproc_shift_left1(double *arr, uint32_t dst_start, uint
     } else if (rem == 1U) {
         arr[dst_start + i]      = arr[dst_start + i + 1U];
     }
-#else
-    if (count > 0U) {
-        memmove(&arr[dst_start], &arr[dst_start + 1U], count * sizeof(double));
-    }
-#endif
 }
 
 /* Single-pass O(W/3) L1-resident sorted ring maintenance with interleaved dual binary search */
-EPROC_ALWAYS_INLINE void eproc_conformal_push_score(eproc_conformal_t *cp, double score) {
+EPROC_AVX2_INLINE void eproc_conformal_push_score_avx2(eproc_conformal_t *cp, double score) {
     if (cp->win_len == cp->win_cap) {
         const double old_val = cp->ring[cp->ring_pos];
         cp->ring[cp->ring_pos] = score;
@@ -336,7 +330,6 @@ EPROC_ALWAYS_INLINE void eproc_conformal_push_score(eproc_conformal_t *cp, doubl
             return;
         }
         const uint32_t len = cp->win_len;
-        /* Dual interleaved branchless lower_bound exploits both Haswell L1 load ports */
         uint32_t rm_idx = 0U;
         uint32_t ins_idx = 0U;
         uint32_t n = len;
@@ -352,11 +345,11 @@ EPROC_ALWAYS_INLINE void eproc_conformal_push_score(eproc_conformal_t *cp, doubl
             rm_idx = len - 1U;
         }
         if (ins_idx <= rm_idx) {
-            eproc_shift_right1(cp->sorted, ins_idx, rm_idx - ins_idx);
+            eproc_shift_right1_avx2(cp->sorted, ins_idx, rm_idx - ins_idx);
             cp->sorted[ins_idx] = score;
         } else {
             const uint32_t dst = ins_idx - 1U;
-            eproc_shift_left1(cp->sorted, rm_idx, dst - rm_idx);
+            eproc_shift_left1_avx2(cp->sorted, rm_idx, dst - rm_idx);
             cp->sorted[dst] = score;
         }
         return;
@@ -369,10 +362,71 @@ EPROC_ALWAYS_INLINE void eproc_conformal_push_score(eproc_conformal_t *cp, doubl
     }
 
     const uint32_t ins_idx = eproc_lower_bound(cp->sorted, cp->win_len, score);
-    eproc_shift_right1(cp->sorted, ins_idx, cp->win_len - ins_idx);
+    eproc_shift_right1_avx2(cp->sorted, ins_idx, cp->win_len - ins_idx);
     cp->sorted[ins_idx] = score;
     cp->win_len++;
 }
+#endif
+
+#if !EPROC_STATIC_AVX2
+EPROC_ALWAYS_INLINE void eproc_conformal_push_score_scalar(eproc_conformal_t *cp, double score) {
+    if (cp->win_len == cp->win_cap) {
+        const double old_val = cp->ring[cp->ring_pos];
+        cp->ring[cp->ring_pos] = score;
+        cp->ring_pos++;
+        if (cp->ring_pos >= cp->win_cap) {
+            cp->ring_pos = 0U;
+        }
+        if (old_val == score) {
+            return;
+        }
+        const uint32_t len = cp->win_len;
+        uint32_t rm_idx = 0U;
+        uint32_t ins_idx = 0U;
+        uint32_t n = len;
+        while (n > 1U) {
+            const uint32_t half = n >> 1;
+            rm_idx  += (cp->sorted[rm_idx  + half] < old_val) ? half : 0U;
+            ins_idx += (cp->sorted[ins_idx + half] < score)   ? half : 0U;
+            n -= half;
+        }
+        rm_idx  += (cp->sorted[rm_idx]  < old_val) ? 1U : 0U;
+        ins_idx += (cp->sorted[ins_idx] < score)   ? 1U : 0U;
+        if (rm_idx >= len) {
+            rm_idx = len - 1U;
+        }
+        if (ins_idx <= rm_idx) {
+            const uint32_t cnt = rm_idx - ins_idx;
+            if (cnt > 0U) {
+                memmove(&cp->sorted[ins_idx + 1U], &cp->sorted[ins_idx], cnt * sizeof(double));
+            }
+            cp->sorted[ins_idx] = score;
+        } else {
+            const uint32_t dst = ins_idx - 1U;
+            const uint32_t cnt = dst - rm_idx;
+            if (cnt > 0U) {
+                memmove(&cp->sorted[rm_idx], &cp->sorted[rm_idx + 1U], cnt * sizeof(double));
+            }
+            cp->sorted[dst] = score;
+        }
+        return;
+    }
+
+    cp->ring[cp->ring_pos] = score;
+    cp->ring_pos++;
+    if (cp->ring_pos >= cp->win_cap) {
+        cp->ring_pos = 0U;
+    }
+
+    const uint32_t ins_idx = eproc_lower_bound(cp->sorted, cp->win_len, score);
+    const uint32_t cnt = cp->win_len - ins_idx;
+    if (cnt > 0U) {
+        memmove(&cp->sorted[ins_idx + 1U], &cp->sorted[ins_idx], cnt * sizeof(double));
+    }
+    cp->sorted[ins_idx] = score;
+    cp->win_len++;
+}
+#endif
 
 static inline void eproc_conformal_fill_meta(const eproc_conformal_t *cp,
                                              eproc_conformal_out_t *meta_out) {
@@ -487,11 +541,11 @@ void eproc_conformal_predict(const eproc_conformal_t *cp,
 
 /* Compute exact normalized weights from exp_log_w using the SAME exp4_neg50
  * kernel as the inner step -> guarantees 0.0-ULP scalar vs batch identity! */
-EPROC_ALWAYS_INLINE void eproc_conformal_load_weights(
+#if EPROC_BUILD_AVX2
+EPROC_AVX2_INLINE void eproc_conformal_load_weights_avx2(
     const eproc_conformal_t *cp,
     double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS]) {
     for (uint32_t r = 0; r < cp->n_rates; ++r) {
-#if defined(__AVX2__)
         const __m256d vlw = _mm256_loadu_pd(cp->exp_log_w[r]);
         const __m256d vw = eproc_exp4_neg50_avx2(vlw);
         const double w_sum = eproc_hsum4_avx2(vw);
@@ -499,24 +553,11 @@ EPROC_ALWAYS_INLINE void eproc_conformal_load_weights(
             ? _mm256_mul_pd(vw, _mm256_set1_pd(1.0 / w_sum))
             : _mm256_set1_pd(0.25);
         _mm256_storeu_pd(w_cache[r], vnorm);
-#else
-        double w[4];
-        for (int k = 0; k < 4; ++k) {
-            w[k] = eproc_exp_neg50_scalar(cp->exp_log_w[r][k]);
-        }
-        const double w_sum = (w[0] + w[1]) + (w[2] + w[3]);
-        const double inv_s = (w_sum > 0.0) ? (1.0 / w_sum) : 0.25;
-        for (int k = 0; k < 4; ++k) {
-            w_cache[r][k] = w[k] * inv_s;
-        }
-#endif
     }
 }
 
-/* 3-pass ROB-overlapping, zero-spill AVX2 4-expert AgACI BOA + PID step:
- * Parameterized by compile-time-specializable n_rates_arg so the common 5-rate
- * steady-state batch path unrolls cleanly and overlaps all 5 rates in Haswell's ROB. */
-EPROC_ALWAYS_INLINE void eproc_conformal_step_cached(
+/* 3-pass ROB-overlapping, zero-spill AVX2 4-expert AgACI BOA + PID step */
+EPROC_AVX2_INLINE void eproc_conformal_step_cached_avx2(
     eproc_conformal_t *cp,
     double score,
     double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS],
@@ -535,7 +576,7 @@ EPROC_ALWAYS_INLINE void eproc_conformal_step_cached(
             cp->emp_cov_ema[r] = (1.0 - ema_beta) * cp->emp_cov_ema[r];
             cp->eff_alpha[r] = cp->target_alphas[r];
         }
-        eproc_conformal_push_score(cp, score);
+        eproc_conformal_push_score_avx2(cp, score);
         cp->n_updates++;
         for (uint32_t r = 0; r < n_rates; ++r) {
             cp->current_q[r] = score;
@@ -561,7 +602,6 @@ EPROC_ALWAYS_INLINE void eproc_conformal_step_cached(
     double wa_sum_arr[EPROC_MAX_RATES] = {0.0};
     const double pid_ki = cp->pid_ki;
 
-#if defined(__AVX2__)
     double reg_buf[EPROC_MAX_RATES][4];
     double reg2_buf[EPROC_MAX_RATES][4];
 
@@ -663,7 +703,7 @@ EPROC_ALWAYS_INLINE void eproc_conformal_step_cached(
         }
     }
 
-    /* Micro-pass 2: Bit-exact rsqrt4 BOA learning rate + log-weight shift (0 spills!) */
+    /* Micro-pass 2: Bit-exact rsqrt4 BOA learning rate + log-weight shift */
     {
         const __m256d v_one = _mm256_set1_pd(1.0);
         const __m256d v_half = _mm256_set1_pd(0.5);
@@ -702,7 +742,7 @@ EPROC_ALWAYS_INLINE void eproc_conformal_step_cached(
         }
     }
 
-    /* Micro-pass 4: Vectorized 1/w_sum normalization via dedicated divider unit */
+    /* Micro-pass 4: Vectorized 1/w_sum normalization */
     {
         double inv_w_arr[EPROC_MAX_RATES];
         const __m256d v_one = _mm256_set1_pd(1.0);
@@ -726,7 +766,140 @@ EPROC_ALWAYS_INLINE void eproc_conformal_step_cached(
             a_agg_arr[r] = wa_sum_arr[r] * inv_s;
         }
     }
-#else
+
+    if (pid_ki > 0.0) {
+        double th[EPROC_MAX_RATES];
+        eproc_tanh_rates_avx2(pid_z, th, n_rates);
+        for (uint32_t r = 0; r < n_rates; ++r) {
+            a_agg_arr[r] -= pid_ki * th[r];
+        }
+    }
+
+    eproc_conformal_push_score_avx2(cp, score);
+    cp->n_updates++;
+
+    if (n_rates >= 4U) {
+        const __m256d v_zero = _mm256_setzero_pd();
+        const __m256d v_one = _mm256_set1_pd(1.0);
+        const __m256d v_new_lp1 = _mm256_set1_pd((double)(cp->win_len + 1U));
+        const __m256d v_new_lm1 = _mm256_set1_pd((double)(cp->win_len - 1U));
+        __m256d vea = _mm256_min_pd(_mm256_max_pd(_mm256_loadu_pd(a_agg_arr), v_zero), v_one);
+        _mm256_storeu_pd(cp->eff_alpha, vea);
+        __m256d vcq = eproc_sorted_quantile4_avx2(cp->sorted, v_new_lp1, v_new_lm1, vea);
+        _mm256_storeu_pd(cp->current_q, vcq);
+        for (uint32_t r = 4U; r < n_rates; ++r) {
+            const double ea = eproc_clamp(a_agg_arr[r], 0.0, 1.0);
+            cp->eff_alpha[r] = ea;
+            cp->current_q[r] = eproc_sorted_quantile(cp->sorted, cp->win_len, ea);
+        }
+    } else {
+        for (uint32_t r = 0; r < n_rates; ++r) {
+            const double ea = eproc_clamp(a_agg_arr[r], 0.0, 1.0);
+            cp->eff_alpha[r] = ea;
+            cp->current_q[r] = eproc_sorted_quantile(cp->sorted, cp->win_len, ea);
+        }
+    }
+
+    eproc_pava_nondecreasing(cp->current_q, n_rates);
+}
+
+EPROC_TARGET_AVX2
+static void eproc_conformal_run_single_avx2(eproc_conformal_t *cp, double score) {
+    const double inv_csat = (cp->pid_csat > 0.0) ? (1.0 / cp->pid_csat) : 0.0;
+    const double max_pid_sum = 10.0 * cp->pid_csat;
+    double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS];
+    eproc_conformal_load_weights_avx2(cp, w_cache);
+    eproc_conformal_step_cached_avx2(cp, score, w_cache, inv_csat, max_pid_sum, cp->n_rates);
+}
+
+EPROC_TARGET_AVX2
+static void eproc_conformal_run_batch_avx2(eproc_conformal_t *cp, const double *scores, size_t n) {
+    const double inv_csat = (cp->pid_csat > 0.0) ? (1.0 / cp->pid_csat) : 0.0;
+    const double max_pid_sum = 10.0 * cp->pid_csat;
+    double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS];
+    eproc_conformal_load_weights_avx2(cp, w_cache);
+    const uint32_t nr = cp->n_rates;
+    if (nr == 5U) {
+        for (size_t i = 0; i < n; ++i) {
+            const double s = scores[i];
+            if (!isfinite(s)) {
+                continue;
+            }
+            eproc_conformal_step_cached_avx2(cp, s, w_cache, inv_csat, max_pid_sum, 5U);
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            const double s = scores[i];
+            if (!isfinite(s)) {
+                continue;
+            }
+            eproc_conformal_step_cached_avx2(cp, s, w_cache, inv_csat, max_pid_sum, nr);
+        }
+    }
+}
+#endif
+
+#if !EPROC_STATIC_AVX2
+EPROC_ALWAYS_INLINE void eproc_conformal_load_weights_scalar(
+    const eproc_conformal_t *cp,
+    double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS]) {
+    for (uint32_t r = 0; r < cp->n_rates; ++r) {
+        double w[4];
+        for (int k = 0; k < 4; ++k) {
+            w[k] = eproc_exp_neg50_scalar(cp->exp_log_w[r][k]);
+        }
+        const double w_sum = (w[0] + w[1]) + (w[2] + w[3]);
+        const double inv_s = (w_sum > 0.0) ? (1.0 / w_sum) : 0.25;
+        for (int k = 0; k < 4; ++k) {
+            w_cache[r][k] = w[k] * inv_s;
+        }
+    }
+}
+
+EPROC_ALWAYS_INLINE void eproc_conformal_step_cached_scalar(
+    eproc_conformal_t *cp,
+    double score,
+    double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS],
+    double inv_csat,
+    double max_pid_sum,
+    uint32_t n_rates) {
+    static const double SQRT_LOG4 = 1.17741002251547469101;
+    const uint32_t prev_len = cp->win_len;
+
+    const double ema_beta = (cp->n_updates < 50ULL)
+        ? (1.0 / (double)(cp->n_updates + 1ULL))
+        : 0.02;
+
+    if (prev_len == 0U) {
+        for (uint32_t r = 0; r < n_rates; ++r) {
+            cp->emp_cov_ema[r] = (1.0 - ema_beta) * cp->emp_cov_ema[r];
+            cp->eff_alpha[r] = cp->target_alphas[r];
+        }
+        eproc_conformal_push_score_scalar(cp, score);
+        cp->n_updates++;
+        for (uint32_t r = 0; r < n_rates; ++r) {
+            cp->current_q[r] = score;
+        }
+        return;
+    }
+
+    double half_scale;
+    if (prev_len >= 2U) {
+        const double half_rng = 0.5 * cp->sorted[prev_len - 1U] - 0.5 * cp->sorted[0];
+        half_scale = (half_rng > 0.5e-6) ? half_rng : 0.5e-6;
+    } else {
+        const double half_ab = 0.5 * fabs(score);
+        half_scale = (half_ab > 0.5) ? half_ab : 0.5;
+    }
+    const double inv_half_scale = 1.0 / half_scale;
+    const double half_score = 0.5 * score;
+
+    double a_agg_arr[EPROC_MAX_RATES] = {0.0};
+    double pid_z[EPROC_MAX_RATES] = {0.0};
+    double w_sum_arr[EPROC_MAX_RATES] = {1.0, 1.0, 1.0, 1.0, 1.0};
+    double wa_sum_arr[EPROC_MAX_RATES] = {0.0};
+    const double pid_ki = cp->pid_ki;
+
     double w_raw_arr[EPROC_MAX_RATES][4];
     for (uint32_t r = 0; r < n_rates; ++r) {
         const double target_a = cp->target_alphas[r];
@@ -796,48 +969,60 @@ EPROC_ALWAYS_INLINE void eproc_conformal_step_cached(
         }
         a_agg_arr[r] = wa_sum_arr[r] * inv_s;
     }
-#endif
 
     if (pid_ki > 0.0) {
         double th[EPROC_MAX_RATES];
-        eproc_tanh_rates(pid_z, th, n_rates);
+        eproc_tanh_rates_scalar(pid_z, th, n_rates);
         for (uint32_t r = 0; r < n_rates; ++r) {
             a_agg_arr[r] -= pid_ki * th[r];
         }
     }
 
-    /* Insert score into circular raw buffer + single-pass inline-AVX2 sorted ring */
-    eproc_conformal_push_score(cp, score);
+    eproc_conformal_push_score_scalar(cp, score);
     cp->n_updates++;
 
-#if defined(__AVX2__)
-    if (n_rates >= 4U) {
-        const __m256d v_zero = _mm256_setzero_pd();
-        const __m256d v_one = _mm256_set1_pd(1.0);
-        const __m256d v_new_lp1 = _mm256_set1_pd((double)(cp->win_len + 1U));
-        const __m256d v_new_lm1 = _mm256_set1_pd((double)(cp->win_len - 1U));
-        __m256d vea = _mm256_min_pd(_mm256_max_pd(_mm256_loadu_pd(a_agg_arr), v_zero), v_one);
-        _mm256_storeu_pd(cp->eff_alpha, vea);
-        __m256d vcq = eproc_sorted_quantile4_avx2(cp->sorted, v_new_lp1, v_new_lm1, vea);
-        _mm256_storeu_pd(cp->current_q, vcq);
-        for (uint32_t r = 4U; r < n_rates; ++r) {
-            const double ea = eproc_clamp(a_agg_arr[r], 0.0, 1.0);
-            cp->eff_alpha[r] = ea;
-            cp->current_q[r] = eproc_sorted_quantile(cp->sorted, cp->win_len, ea);
-        }
-    } else
-#endif
-    {
-        for (uint32_t r = 0; r < n_rates; ++r) {
-            const double ea = eproc_clamp(a_agg_arr[r], 0.0, 1.0);
-            cp->eff_alpha[r] = ea;
-            cp->current_q[r] = eproc_sorted_quantile(cp->sorted, cp->win_len, ea);
-        }
+    for (uint32_t r = 0; r < n_rates; ++r) {
+        const double ea = eproc_clamp(a_agg_arr[r], 0.0, 1.0);
+        cp->eff_alpha[r] = ea;
+        cp->current_q[r] = eproc_sorted_quantile(cp->sorted, cp->win_len, ea);
     }
 
-    /* Crossing-free guarantee via overflow-safe PAVA isotonic projection */
     eproc_pava_nondecreasing(cp->current_q, n_rates);
 }
+
+static void eproc_conformal_run_single_scalar(eproc_conformal_t *cp, double score) {
+    const double inv_csat = (cp->pid_csat > 0.0) ? (1.0 / cp->pid_csat) : 0.0;
+    const double max_pid_sum = 10.0 * cp->pid_csat;
+    double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS];
+    eproc_conformal_load_weights_scalar(cp, w_cache);
+    eproc_conformal_step_cached_scalar(cp, score, w_cache, inv_csat, max_pid_sum, cp->n_rates);
+}
+
+static void eproc_conformal_run_batch_scalar(eproc_conformal_t *cp, const double *scores, size_t n) {
+    const double inv_csat = (cp->pid_csat > 0.0) ? (1.0 / cp->pid_csat) : 0.0;
+    const double max_pid_sum = 10.0 * cp->pid_csat;
+    double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS];
+    eproc_conformal_load_weights_scalar(cp, w_cache);
+    const uint32_t nr = cp->n_rates;
+    if (nr == 5U) {
+        for (size_t i = 0; i < n; ++i) {
+            const double s = scores[i];
+            if (!isfinite(s)) {
+                continue;
+            }
+            eproc_conformal_step_cached_scalar(cp, s, w_cache, inv_csat, max_pid_sum, 5U);
+        }
+    } else {
+        for (size_t i = 0; i < n; ++i) {
+            const double s = scores[i];
+            if (!isfinite(s)) {
+                continue;
+            }
+            eproc_conformal_step_cached_scalar(cp, s, w_cache, inv_csat, max_pid_sum, nr);
+        }
+    }
+}
+#endif
 
 int eproc_conformal_update(eproc_conformal_t *cp,
                            double nonconformity_score,
@@ -849,11 +1034,16 @@ int eproc_conformal_update(eproc_conformal_t *cp,
         eproc_conformal_fill_meta(cp, meta_out);
         return EPROC_OK;
     }
-    const double inv_csat = (cp->pid_csat > 0.0) ? (1.0 / cp->pid_csat) : 0.0;
-    const double max_pid_sum = 10.0 * cp->pid_csat;
-    double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS];
-    eproc_conformal_load_weights(cp, w_cache);
-    eproc_conformal_step_cached(cp, nonconformity_score, w_cache, inv_csat, max_pid_sum, cp->n_rates);
+#if EPROC_BUILD_AVX2
+    if (eproc_use_avx2()) {
+        eproc_conformal_run_single_avx2(cp, nonconformity_score);
+        eproc_conformal_fill_meta(cp, meta_out);
+        return EPROC_OK;
+    }
+#endif
+#if !EPROC_STATIC_AVX2
+    eproc_conformal_run_single_scalar(cp, nonconformity_score);
+#endif
     eproc_conformal_fill_meta(cp, meta_out);
     return EPROC_OK;
 }
@@ -865,28 +1055,16 @@ int eproc_conformal_update_batch(eproc_conformal_t *cp,
     if (cp == NULL || (n > 0 && scores == NULL)) {
         return EPROC_ERR_INVALID;
     }
-    const double inv_csat = (cp->pid_csat > 0.0) ? (1.0 / cp->pid_csat) : 0.0;
-    const double max_pid_sum = 10.0 * cp->pid_csat;
-    double w_cache[EPROC_MAX_RATES][EPROC_AGACI_EXPERTS];
-    eproc_conformal_load_weights(cp, w_cache);
-    const uint32_t nr = cp->n_rates;
-    if (nr == 5U) {
-        for (size_t i = 0; i < n; ++i) {
-            const double s = scores[i];
-            if (!isfinite(s)) {
-                continue;
-            }
-            eproc_conformal_step_cached(cp, s, w_cache, inv_csat, max_pid_sum, 5U);
-        }
-    } else {
-        for (size_t i = 0; i < n; ++i) {
-            const double s = scores[i];
-            if (!isfinite(s)) {
-                continue;
-            }
-            eproc_conformal_step_cached(cp, s, w_cache, inv_csat, max_pid_sum, nr);
-        }
+#if EPROC_BUILD_AVX2
+    if (eproc_use_avx2()) {
+        eproc_conformal_run_batch_avx2(cp, scores, n);
+        eproc_conformal_fill_meta(cp, meta_out);
+        return EPROC_OK;
     }
+#endif
+#if !EPROC_STATIC_AVX2
+    eproc_conformal_run_batch_scalar(cp, scores, n);
+#endif
     eproc_conformal_fill_meta(cp, meta_out);
     return EPROC_OK;
 }
@@ -1251,6 +1429,28 @@ void eproc_cmonoid_add_batch(eproc_cmonoid_t *m, const double *scores, size_t n)
     m->max_val = max_val;
 }
 
+#if EPROC_BUILD_AVX2
+EPROC_TARGET_AVX2
+static void eproc_cmonoid_add_bins_avx2(uint64_t *dst, const uint64_t *a, const uint64_t *b) {
+    for (size_t i = 0; i < EPROC_CMONOID_BINS; i += 4) {
+        __m256i va = _mm256_loadu_si256((const __m256i *)(const void *)(a + i));
+        __m256i vb = _mm256_loadu_si256((const __m256i *)(const void *)(b + i));
+        __m256i vs = _mm256_add_epi64(va, vb);
+        _mm256_storeu_si256((__m256i *)(void *)(dst + i), vs);
+    }
+}
+
+EPROC_TARGET_AVX2
+static void eproc_cmonoid_sub_bins_avx2(uint64_t *dst, const uint64_t *g, const uint64_t *l) {
+    for (size_t i = 0; i < EPROC_CMONOID_BINS; i += 4) {
+        __m256i vg = _mm256_loadu_si256((const __m256i *)(const void *)(g + i));
+        __m256i vl = _mm256_loadu_si256((const __m256i *)(const void *)(l + i));
+        __m256i vd = _mm256_sub_epi64(vg, vl);
+        _mm256_storeu_si256((__m256i *)(void *)(dst + i), vd);
+    }
+}
+#endif
+
 void eproc_cmonoid_merge(const eproc_cmonoid_t *a,
                          const eproc_cmonoid_t *b,
                          eproc_cmonoid_t *out) {
@@ -1289,18 +1489,18 @@ void eproc_cmonoid_merge(const eproc_cmonoid_t *a,
         : a->scale_hint;
     const uint64_t flags = a->flags | b->flags | (scale_mismatch ? EPROC_CMONOID_FLAG_SCALE_MISMATCH : 0ULL);
 
-#if defined(__AVX2__)
-    for (size_t i = 0; i < EPROC_CMONOID_BINS; i += 4) {
-        __m256i va = _mm256_loadu_si256((const __m256i *)(const void *)(a->bin_counts + i));
-        __m256i vb = _mm256_loadu_si256((const __m256i *)(const void *)(b->bin_counts + i));
-        __m256i vs = _mm256_add_epi64(va, vb);
-        _mm256_storeu_si256((__m256i *)(void *)(out->bin_counts + i), vs);
-    }
-#else
-    for (size_t i = 0; i < EPROC_CMONOID_BINS; ++i) {
-        out->bin_counts[i] = a->bin_counts[i] + b->bin_counts[i];
-    }
+#if EPROC_BUILD_AVX2
+    if (eproc_use_avx2()) {
+        eproc_cmonoid_add_bins_avx2(out->bin_counts, a->bin_counts, b->bin_counts);
+    } else
 #endif
+    {
+#if !EPROC_STATIC_AVX2
+        for (size_t i = 0; i < EPROC_CMONOID_BINS; ++i) {
+            out->bin_counts[i] = a->bin_counts[i] + b->bin_counts[i];
+        }
+#endif
+    }
 
     out->count = new_count;
     out->sum = sum;
@@ -1356,18 +1556,18 @@ int eproc_cmonoid_subtract(const eproc_cmonoid_t *global_m,
     const double l_min = local_m->min_val;
     const double l_max = local_m->max_val;
 
-#if defined(__AVX2__)
-    for (size_t i = 0; i < EPROC_CMONOID_BINS; i += 4) {
-        __m256i vg = _mm256_loadu_si256((const __m256i *)(const void *)(global_m->bin_counts + i));
-        __m256i vl = _mm256_loadu_si256((const __m256i *)(const void *)(local_m->bin_counts + i));
-        __m256i vd = _mm256_sub_epi64(vg, vl);
-        _mm256_storeu_si256((__m256i *)(void *)(loo_out->bin_counts + i), vd);
-    }
-#else
-    for (size_t i = 0; i < EPROC_CMONOID_BINS; ++i) {
-        loo_out->bin_counts[i] = global_m->bin_counts[i] - local_m->bin_counts[i];
-    }
+#if EPROC_BUILD_AVX2
+    if (eproc_use_avx2()) {
+        eproc_cmonoid_sub_bins_avx2(loo_out->bin_counts, global_m->bin_counts, local_m->bin_counts);
+    } else
 #endif
+    {
+#if !EPROC_STATIC_AVX2
+        for (size_t i = 0; i < EPROC_CMONOID_BINS; ++i) {
+            loo_out->bin_counts[i] = global_m->bin_counts[i] - local_m->bin_counts[i];
+        }
+#endif
+    }
 
     loo_out->count = new_count;
     loo_out->scale_hint = scale_hint;

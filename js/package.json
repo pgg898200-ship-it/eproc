@@ -1,0 +1,54 @@
+{
+  "name": "@eproc/wasm",
+  "version": "0.1.0",
+  "description": "Sub-microsecond anytime-valid statistics, multi-rate online conformal calibration, Byzantine-safe multi-agent fusion, and causal subsampling compiled from zero-allocation C11 to WebAssembly.",
+  "type": "module",
+  "main": "./eproc.mjs",
+  "module": "./eproc.mjs",
+  "types": "./eproc.d.ts",
+  "exports": {
+    ".": {
+      "types": "./eproc.d.ts",
+      "import": "./eproc.mjs",
+      "default": "./eproc.mjs"
+    },
+    "./eproc.wasm": "../dist/eproc.wasm"
+  },
+  "files": [
+    "eproc.mjs",
+    "eproc.d.ts",
+    "../dist/eproc.wasm",
+    "../LICENSE",
+    "../NOTICE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "test": "node --test test_wasm.mjs"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/pgg898200-ship-it/eproc",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pgg898200-ship-it/eproc.git",
+    "directory": "js"
+  },
+  "bugs": {
+    "url": "https://github.com/pgg898200-ship-it/eproc/issues"
+  },
+  "keywords": [
+    "e-process",
+    "anytime-valid",
+    "confidence-sequence",
+    "conformal-prediction",
+    "webassembly",
+    "wasm",
+    "multi-agent",
+    "byzantine-safe",
+    "sequential-testing",
+    "horvitz-thompson"
+  ]
+}

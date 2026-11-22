@@ -19,25 +19,27 @@ EPROC_STATIC_ASSERT((EPROC_ECHO_TABLE_CAP & (EPROC_ECHO_TABLE_CAP - 1U)) == 0U,
  * ============================================================================ */
 
 static void eproc_boa_publish_seqlock(eproc_boa_t *boa) {
-    uint64_t snap[EPROC_BOA_MAX_EXPERTS + 2];
-    memset(snap, 0, sizeof(snap));
+    const uint32_t k = boa->n_experts;
+    uint64_t snap[EPROC_BOA_MAX_EXPERTS];
 
     if (boa->fallback_active) {
-        for (uint32_t i = 0; i < boa->n_experts; ++i) {
+        for (uint32_t i = 0; i < k; ++i) {
             const double w = (i == boa->anchor_idx) ? 1.0 : 0.0;
             snap[i] = eproc_f64_to_u64(w);
         }
     } else {
-        for (uint32_t i = 0; i < boa->n_experts; ++i) {
+        for (uint32_t i = 0; i < k; ++i) {
             snap[i] = eproc_f64_to_u64(boa->weights[i]);
         }
     }
-    snap[EPROC_BOA_MAX_EXPERTS] =
-        ((uint64_t)boa->n_experts << 32) | (uint64_t)(uint32_t)boa->fallback_active;
-    snap[EPROC_BOA_MAX_EXPERTS + 1] = boa->n_updates;
+    const uint64_t meta =
+        ((uint64_t)k << 32) | (uint64_t)(uint32_t)boa->fallback_active;
+    const uint64_t n_upd = boa->n_updates;
 
     const uint64_t odd = eproc_seqlock_write_begin_u64(&boa->seqlock_seq);
-    eproc_seqlock_store_words_u64(boa->seqlock_words, snap, EPROC_BOA_MAX_EXPERTS + 2U);
+    eproc_seqlock_store_words_u64(boa->seqlock_words, snap, k);
+    eproc_seqlock_store_words_u64(&boa->seqlock_words[EPROC_BOA_MAX_EXPERTS], &meta, 1U);
+    eproc_seqlock_store_words_u64(&boa->seqlock_words[EPROC_BOA_MAX_EXPERTS + 1U], &n_upd, 1U);
     eproc_seqlock_write_end_u64(&boa->seqlock_seq, odd);
 }
 
@@ -292,6 +294,7 @@ int eproc_boa_update(eproc_boa_t *boa,
     /* Scale-free Wintenberger-2017 BOA second-order update with mild variance
      * forgetting + Fixed-Share exploration floor for fast post-shift recovery. */
     const double log_k = log((k > 2U) ? (double)k : 2.0);
+    const double inv_scale = 1.0 / prev_scale;
     double max_lw = -INFINITY;
     uint32_t n_active = 0;
 
@@ -301,7 +304,7 @@ int eproc_boa_update(eproc_boa_t *boa,
             continue;
         }
         n_active++;
-        const double reg = eproc_clamp((l_mix - eff_loss[i]) / prev_scale, -1.0, 1.0);
+        const double reg = eproc_clamp((l_mix - eff_loss[i]) * inv_scale, -1.0, 1.0);
         boa->grad_sq_sum[i] = 0.98 * boa->grad_sq_sum[i] + reg * reg;
         const double denom_v = (boa->grad_sq_sum[i] > 1.0) ? boa->grad_sq_sum[i] : 1.0;
         double eta = sqrt(log_k / denom_v);
@@ -438,20 +441,23 @@ int eproc_boa_snapshot_weights(const eproc_boa_t *boa,
         return EPROC_ERR_INVALID;
     }
 
-    uint64_t snap[EPROC_BOA_MAX_EXPERTS + 2];
-    eproc_seqlock_read_words_u64(&boa->seqlock_seq,
-                                 boa->seqlock_words,
-                                 snap,
-                                 EPROC_BOA_MAX_EXPERTS + 2U);
+    uint64_t snap[EPROC_BOA_MAX_EXPERTS];
+    uint64_t meta = 0ULL;
+    const uint32_t lim = (max_experts < EPROC_BOA_MAX_EXPERTS) ? max_experts : EPROC_BOA_MAX_EXPERTS;
+    eproc_seqlock_read_meta_words_u64(&boa->seqlock_seq,
+                                      boa->seqlock_words,
+                                      EPROC_BOA_MAX_EXPERTS,
+                                      &meta,
+                                      snap,
+                                      lim);
 
-    const uint64_t meta = snap[EPROC_BOA_MAX_EXPERTS];
     uint32_t n_exp = (uint32_t)(meta >> 32);
     if (n_exp > EPROC_BOA_MAX_EXPERTS) {
         n_exp = EPROC_BOA_MAX_EXPERTS;
     }
     const int32_t fb = (int32_t)(uint32_t)(meta & 0xFFFFFFFFULL);
 
-    const uint32_t copy_n = (n_exp < max_experts) ? n_exp : max_experts;
+    const uint32_t copy_n = (n_exp < lim) ? n_exp : lim;
     for (uint32_t i = 0; i < copy_n; ++i) {
         weights_out[i] = eproc_u64_to_f64(snap[i]);
     }

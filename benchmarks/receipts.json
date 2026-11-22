@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
   "mode": "full",
-  "total_wall_s": 22.786,
+  "total_wall_s": 23.958,
   "provenance": {
     "tag": "[LIVE-CPU]",
-    "timestamp_utc": "2026-11-22T17:20:05Z",
+    "timestamp_utc": "2026-11-22T19:28:30Z",
     "cpu_model": "Intel(R) Xeon(R) CPU @ 2.30GHz",
     "logical_cpus": 2,
     "platform": "Linux-6.18.57-x86_64-with-glibc2.39",
     "machine": "x86_64",
     "python_version": "3.12.16",
-    "git_sha": "unknown",
+    "git_sha": "8cb6a1f",
     "eproc_abi_version": 1,
     "eproc_simd_flags": 3,
     "eproc_simd_features": [
@@ -18,21 +18,21 @@
       "FMA"
     ],
     "cold_import_ms_trials": [
-      0.839,
-      0.774,
-      0.751,
-      0.823,
-      0.776
+      0.883,
+      1.656,
+      0.888,
+      1.45,
+      0.765
     ],
-    "cold_import_median_ms": 0.776,
+    "cold_import_median_ms": 0.888,
     "cold_import_with_lib_ms_trials": [
-      47.469,
-      47.202,
-      48.155,
-      47.973,
-      47.205
+      51.171,
+      55.389,
+      49.701,
+      53.743,
+      57.152
     ],
-    "cold_import_with_lib_median_ms": 47.469
+    "cold_import_with_lib_median_ms": 53.743
   },
   "seeds": {
     "b1_null_bernoulli": 20261101,
@@ -53,7 +53,7 @@
         "n_trials": 2000,
         "horizon_t": 1000,
         "alpha": 0.05,
-        "elapsed_s": 4.94,
+        "elapsed_s": 4.868,
         "naive_peek_false_positives": 784,
         "naive_peek_fpr": 0.392,
         "naive_peek_fpr_ci95": [
@@ -174,195 +174,195 @@
           "ops_py": 20000,
           "ops_ep": 20000,
           "py_trials_ns": [
-            2123.639,
-            2144.483,
-            2124.93,
-            2126.654,
-            2122.338
+            3814.055,
+            4114.082,
+            2536.059,
+            2052.438,
+            2098.321
           ],
           "ep_trials_ns": [
-            111.961,
-            112.232,
-            113.639,
-            110.325,
-            109.595
+            171.155,
+            237.578,
+            113.23,
+            118.45,
+            112.057
           ],
-          "py_median_ns": 2124.93,
-          "py_p95_ns": 2140.917,
-          "py_p99_ns": 2143.77,
-          "py_mops": 0.4706,
-          "ep_median_ns": 111.961,
-          "ep_p95_ns": 113.358,
-          "ep_p99_ns": 113.583,
-          "ep_mops": 8.9317,
-          "speedup_x": 18.98
+          "py_median_ns": 2536.059,
+          "py_p95_ns": 4054.077,
+          "py_p99_ns": 4102.081,
+          "py_mops": 0.3943,
+          "ep_median_ns": 118.45,
+          "ep_p95_ns": 224.294,
+          "ep_p99_ns": 234.921,
+          "ep_mops": 8.4423,
+          "speedup_x": 21.41
         },
         "eprocess_batch": {
           "runs": 5,
           "ops_py": 100000,
           "ops_ep": 100000,
           "py_trials_ns": [
-            519.446,
-            511.121,
-            510.907,
-            509.17,
-            516.147
+            494.138,
+            545.137,
+            515.141,
+            486.546,
+            489.939
           ],
           "ep_trials_ns": [
-            27.53,
-            27.446,
-            27.711,
-            26.741,
-            31.65
+            27.607,
+            28.978,
+            27.013,
+            27.329,
+            27.694
           ],
-          "py_median_ns": 511.121,
-          "py_p95_ns": 518.786,
-          "py_p99_ns": 519.314,
-          "py_mops": 1.9565,
-          "ep_median_ns": 27.53,
-          "ep_p95_ns": 30.862,
-          "ep_p99_ns": 31.492,
-          "ep_mops": 36.3236,
-          "speedup_x": 18.57
+          "py_median_ns": 494.138,
+          "py_p95_ns": 539.137,
+          "py_p99_ns": 543.937,
+          "py_mops": 2.0237,
+          "ep_median_ns": 27.607,
+          "ep_p95_ns": 28.721,
+          "ep_p99_ns": 28.927,
+          "ep_mops": 36.2229,
+          "speedup_x": 17.9
         },
         "cs_eb_scalar": {
           "runs": 5,
           "ops_py": 20000,
           "ops_ep": 20000,
           "py_trials_ns": [
-            2563.18,
-            2583.005,
-            2588.862,
-            2558.865,
-            2627.685
+            2572.09,
+            2661.602,
+            2616.102,
+            2614.689,
+            2597.713
           ],
           "ep_trials_ns": [
-            123.921,
-            120.545,
-            123.399,
-            121.243,
-            121.198
+            123.264,
+            162.151,
+            119.99,
+            119.825,
+            118.501
           ],
-          "py_median_ns": 2583.005,
-          "py_p95_ns": 2619.921,
-          "py_p99_ns": 2626.133,
-          "py_mops": 0.3871,
-          "ep_median_ns": 121.243,
-          "ep_p95_ns": 123.816,
-          "ep_p99_ns": 123.9,
-          "ep_mops": 8.2479,
-          "speedup_x": 21.3
+          "py_median_ns": 2614.689,
+          "py_p95_ns": 2652.502,
+          "py_p99_ns": 2659.782,
+          "py_mops": 0.3825,
+          "ep_median_ns": 119.99,
+          "ep_p95_ns": 154.374,
+          "ep_p99_ns": 160.596,
+          "ep_mops": 8.334,
+          "speedup_x": 21.79
         },
         "cs_eb_batch": {
           "runs": 5,
           "ops_py": 100000,
           "ops_ep": 100000,
           "py_trials_ns": [
-            1174.298,
-            1158.632,
-            1154.53,
-            1172.008,
-            1164.472
+            1132.848,
+            1129.363,
+            1130.506,
+            1149.087,
+            1110.15
           ],
           "ep_trials_ns": [
-            63.922,
-            63.841,
-            64.005,
-            64.373,
-            63.766
+            63.163,
+            69.29,
+            82.827,
+            63.908,
+            64.964
           ],
-          "py_median_ns": 1164.472,
-          "py_p95_ns": 1173.84,
-          "py_p99_ns": 1174.207,
-          "py_mops": 0.8588,
-          "ep_median_ns": 63.922,
-          "ep_p95_ns": 64.299,
-          "ep_p99_ns": 64.358,
-          "ep_mops": 15.6442,
-          "speedup_x": 18.22
+          "py_median_ns": 1130.506,
+          "py_p95_ns": 1145.839,
+          "py_p99_ns": 1148.437,
+          "py_mops": 0.8846,
+          "ep_median_ns": 64.964,
+          "ep_p95_ns": 80.12,
+          "ep_p99_ns": 82.286,
+          "ep_mops": 15.393,
+          "speedup_x": 17.4
         },
         "conformal_5rate_scalar": {
           "runs": 5,
           "ops_py": 3000,
           "ops_ep": 5000,
           "py_trials_ns": [
-            86610.888,
-            86114.581,
-            86666.555,
-            86329.515,
-            85834.874
+            86363.76,
+            83942.988,
+            85169.621,
+            84817.979,
+            85945.177
           ],
           "ep_trials_ns": [
-            450.166,
-            445.952,
-            446.262,
-            444.942,
-            454.549
+            477.875,
+            527.415,
+            526.387,
+            553.793,
+            500.386
           ],
-          "py_median_ns": 86329.515,
-          "py_p95_ns": 86655.422,
-          "py_p99_ns": 86664.328,
-          "py_mops": 0.0116,
-          "ep_median_ns": 446.262,
-          "ep_p95_ns": 453.672,
-          "ep_p99_ns": 454.373,
-          "ep_mops": 2.2408,
-          "speedup_x": 193.45
+          "py_median_ns": 85169.621,
+          "py_p95_ns": 86280.043,
+          "py_p99_ns": 86347.017,
+          "py_mops": 0.0117,
+          "ep_median_ns": 526.387,
+          "ep_p95_ns": 548.517,
+          "ep_p99_ns": 552.738,
+          "ep_mops": 1.8997,
+          "speedup_x": 161.8
         },
         "conformal_5rate_batch": {
           "runs": 5,
           "ops_py": 3000,
           "ops_ep": 100000,
           "py_trials_ns": [
-            87645.514,
-            86460.785,
-            87258.003,
-            86489.642,
-            86472.502
+            84334.363,
+            82287.829,
+            86411.62,
+            82802.104,
+            83691.118
           ],
           "ep_trials_ns": [
-            318.599,
-            317.462,
-            316.833,
-            315.729,
-            316.526
+            353.529,
+            356.564,
+            351.082,
+            352.493,
+            356.264
           ],
-          "py_median_ns": 86489.642,
-          "py_p95_ns": 87568.012,
-          "py_p99_ns": 87630.014,
-          "py_mops": 0.0116,
-          "ep_median_ns": 316.833,
-          "ep_p95_ns": 318.371,
-          "ep_p99_ns": 318.553,
-          "ep_mops": 3.1562,
-          "speedup_x": 272.98
+          "py_median_ns": 83691.118,
+          "py_p95_ns": 85996.168,
+          "py_p99_ns": 86328.529,
+          "py_mops": 0.0119,
+          "ep_median_ns": 353.529,
+          "ep_p95_ns": 356.504,
+          "ep_p99_ns": 356.552,
+          "ep_mops": 2.8286,
+          "speedup_x": 236.73
         },
         "cmonoid_add_batch": {
           "runs": 5,
           "ops_py": 100000,
           "ops_ep": 100000,
           "py_trials_ns": [
-            6.558,
-            1.524,
-            0.944,
-            1.485,
-            1.108
+            6.564,
+            1.531,
+            0.894,
+            1.766,
+            0.775
           ],
           "ep_trials_ns": [
-            39.568,
-            38.811,
-            38.641,
-            39.007,
-            39.3
+            38.614,
+            39.659,
+            39.105,
+            38.744,
+            37.526
           ],
-          "py_median_ns": 1.485,
-          "py_p95_ns": 5.551,
-          "py_p99_ns": 6.357,
-          "py_mops": 673.5322,
-          "ep_median_ns": 39.007,
-          "ep_p95_ns": 39.514,
-          "ep_p99_ns": 39.557,
-          "ep_mops": 25.6362,
+          "py_median_ns": 1.531,
+          "py_p95_ns": 5.604,
+          "py_p99_ns": 6.372,
+          "py_mops": 653.138,
+          "ep_median_ns": 38.744,
+          "ep_p95_ns": 39.548,
+          "ep_p99_ns": 39.637,
+          "ep_mops": 25.8108,
           "speedup_x": 0.04
         },
         "cmonoid_merge": {
@@ -370,196 +370,196 @@
           "ops_py": 10000,
           "ops_ep": 10000,
           "py_trials_ns": [
-            1436.256,
-            1459.88,
-            1420.125,
-            1462.211,
-            1480.906
+            1595.096,
+            1598.727,
+            1608.71,
+            1653.135,
+            1663.439
           ],
           "ep_trials_ns": [
-            205.519,
-            202.917,
-            233.768,
-            208.827,
-            214.536
+            209.007,
+            205.828,
+            238.25,
+            219.513,
+            221.563
           ],
-          "py_median_ns": 1459.88,
-          "py_p95_ns": 1477.167,
-          "py_p99_ns": 1480.158,
-          "py_mops": 0.685,
-          "ep_median_ns": 208.827,
-          "ep_p95_ns": 229.922,
-          "ep_p99_ns": 232.999,
-          "ep_mops": 4.7887,
-          "speedup_x": 6.99
+          "py_median_ns": 1608.71,
+          "py_p95_ns": 1661.378,
+          "py_p99_ns": 1663.027,
+          "py_mops": 0.6216,
+          "ep_median_ns": 219.513,
+          "ep_p95_ns": 234.913,
+          "ep_p99_ns": 237.583,
+          "ep_mops": 4.5555,
+          "speedup_x": 7.33
         },
         "cmonoid_subtract_loo": {
           "runs": 5,
           "ops_py": 300,
           "ops_ep": 10000,
           "py_trials_ns": [
-            580623.69,
-            583169.087,
-            578807.76,
-            576681.1,
-            578974.677
+            581671.167,
+            581206.287,
+            569986.163,
+            570235.943,
+            575835.17
           ],
           "ep_trials_ns": [
-            267.83,
-            260.683,
-            272.898,
-            264.875,
-            279.959
+            263.877,
+            257.394,
+            291.545,
+            374.365,
+            285.768
           ],
-          "py_median_ns": 578974.677,
-          "py_p95_ns": 582660.007,
-          "py_p99_ns": 583067.271,
+          "py_median_ns": 575835.17,
+          "py_p95_ns": 581578.191,
+          "py_p99_ns": 581652.571,
           "py_mops": 0.0017,
-          "ep_median_ns": 267.83,
-          "ep_p95_ns": 278.547,
-          "ep_p99_ns": 279.677,
-          "ep_mops": 3.7337,
-          "speedup_x": 2161.73
+          "ep_median_ns": 285.768,
+          "ep_p95_ns": 357.801,
+          "ep_p99_ns": 371.052,
+          "ep_mops": 3.4993,
+          "speedup_x": 2015.04
         },
         "safe_fuser_8experts": {
           "runs": 5,
           "ops_py": 5000,
           "ops_ep": 5000,
           "py_trials_ns": [
-            25620.127,
-            25530.493,
-            25519.32,
-            25660.913,
-            25512.974
+            25802.713,
+            25832.27,
+            25644.122,
+            26746.911,
+            25917.226
           ],
           "ep_trials_ns": [
-            661.584,
-            614.024,
-            612.826,
-            610.083,
-            630.479
+            569.938,
+            571.443,
+            561.717,
+            540.16,
+            588.292
           ],
-          "py_median_ns": 25530.493,
-          "py_p95_ns": 25652.755,
-          "py_p99_ns": 25659.281,
-          "py_mops": 0.0392,
-          "ep_median_ns": 614.024,
-          "ep_p95_ns": 655.363,
-          "ep_p99_ns": 660.34,
-          "ep_mops": 1.6286,
-          "speedup_x": 41.58
+          "py_median_ns": 25832.27,
+          "py_p95_ns": 26580.974,
+          "py_p99_ns": 26713.724,
+          "py_mops": 0.0387,
+          "ep_median_ns": 569.938,
+          "ep_p95_ns": 584.922,
+          "ep_p99_ns": 587.618,
+          "ep_mops": 1.7546,
+          "speedup_x": 45.32
         },
         "echopool_submit": {
           "runs": 5,
           "ops_py": 20000,
           "ops_ep": 20000,
           "py_trials_ns": [
-            1552.055,
-            1581.379,
-            1571.717,
-            1546.45,
-            1594.301
+            1552.762,
+            1645.007,
+            1491.415,
+            1578.012,
+            1523.748
           ],
           "ep_trials_ns": [
-            206.003,
-            215.144,
-            203.813,
-            204.309,
-            205.934
+            188.95,
+            210.079,
+            204.806,
+            201.636,
+            200.272
           ],
-          "py_median_ns": 1571.717,
-          "py_p95_ns": 1591.716,
-          "py_p99_ns": 1593.784,
-          "py_mops": 0.6362,
-          "ep_median_ns": 205.934,
-          "ep_p95_ns": 213.316,
-          "ep_p99_ns": 214.779,
-          "ep_mops": 4.8559,
-          "speedup_x": 7.63
+          "py_median_ns": 1552.762,
+          "py_p95_ns": 1631.608,
+          "py_p99_ns": 1642.327,
+          "py_mops": 0.644,
+          "ep_median_ns": 201.636,
+          "ep_p95_ns": 209.024,
+          "ep_p99_ns": 209.868,
+          "ep_mops": 4.9594,
+          "speedup_x": 7.7
         },
         "varopt_k256": {
           "runs": 5,
           "ops_py": 20000,
           "ops_ep": 20000,
           "py_trials_ns": [
-            2001.637,
-            2402.272,
-            1999.545,
-            1987.578,
-            2185.285
+            1939.54,
+            1890.036,
+            2810.647,
+            2007.344,
+            1934.29
           ],
           "ep_trials_ns": [
-            274.807,
-            249.197,
-            247.821,
-            245.034,
-            247.243
+            276.243,
+            248.913,
+            250.233,
+            256.998,
+            238.302
           ],
-          "py_median_ns": 2001.637,
-          "py_p95_ns": 2358.874,
-          "py_p99_ns": 2393.592,
-          "py_mops": 0.4996,
-          "ep_median_ns": 247.821,
-          "ep_p95_ns": 269.685,
-          "ep_p99_ns": 273.783,
-          "ep_mops": 4.0352,
-          "speedup_x": 8.08
+          "py_median_ns": 1939.54,
+          "py_p95_ns": 2649.986,
+          "py_p99_ns": 2778.515,
+          "py_mops": 0.5156,
+          "ep_median_ns": 250.233,
+          "ep_p95_ns": 272.394,
+          "ep_p99_ns": 275.473,
+          "ep_mops": 3.9963,
+          "speedup_x": 7.75
         },
         "online_rls_d16": {
           "runs": 5,
           "ops_py": 5000,
           "ops_ep": 5000,
           "py_trials_ns": [
-            26176.273,
-            25084.357,
-            23179.222,
-            28299.799,
-            26547.433
+            22891.351,
+            23270.342,
+            24689.818,
+            23405.815,
+            23784.697
           ],
           "ep_trials_ns": [
-            230.812,
-            217.104,
-            230.103,
-            217.717,
-            616.263
+            237.261,
+            221.261,
+            216.279,
+            227.75,
+            218.579
           ],
-          "py_median_ns": 26176.273,
-          "py_p95_ns": 27949.326,
-          "py_p99_ns": 28229.705,
-          "py_mops": 0.0382,
-          "ep_median_ns": 230.103,
-          "ep_p95_ns": 539.173,
-          "ep_p99_ns": 600.845,
-          "ep_mops": 4.3459,
-          "speedup_x": 113.76
+          "py_median_ns": 23405.815,
+          "py_p95_ns": 24508.794,
+          "py_p99_ns": 24653.613,
+          "py_mops": 0.0427,
+          "ep_median_ns": 221.261,
+          "ep_p95_ns": 235.359,
+          "ep_p99_ns": 236.881,
+          "ep_mops": 4.5196,
+          "speedup_x": 105.78
         },
         "sift_voi_2048ch": {
           "runs": 5,
           "ops_py": 150,
           "ops_ep": 150,
           "py_trials_ns": [
-            2068848.0,
-            2061042.067,
-            2041796.98,
-            2037853.687,
-            2049023.96
+            2184175.02,
+            1987448.353,
+            1993786.84,
+            2005243.173,
+            2020371.207
           ],
           "ep_trials_ns": [
-            11124.607,
-            10742.267,
-            11004.36,
-            11335.447,
-            10778.153
+            11883.8,
+            11578.68,
+            12423.433,
+            12581.747,
+            12794.0
           ],
-          "py_median_ns": 2049023.96,
-          "py_p95_ns": 2067286.813,
-          "py_p99_ns": 2068535.763,
+          "py_median_ns": 2005243.173,
+          "py_p95_ns": 2151414.257,
+          "py_p99_ns": 2177622.867,
           "py_mops": 0.0005,
-          "ep_median_ns": 11004.36,
-          "ep_p95_ns": 11293.279,
-          "ep_p99_ns": 11327.013,
-          "ep_mops": 0.0909,
-          "speedup_x": 186.2
+          "ep_median_ns": 12423.433,
+          "ep_p95_ns": 12751.549,
+          "ep_p99_ns": 12785.51,
+          "ep_mops": 0.0805,
+          "speedup_x": 161.41
         }
       },
       "c11_native_microbench": {
@@ -567,81 +567,81 @@
         "simd_flags": 3,
         "cmonoid_wire_bytes": 640,
         "kernels_ns_per_op": {
-          "bet_eprocess": 30.1,
-          "cs_empirical_bernstein": 67.89,
-          "cs_normal_mixture": 29.8,
-          "agent_race_8arms": 96.78,
-          "conformal_5rate_agaci_w128": 315.34,
-          "cmonoid_add": 38.78,
-          "cmonoid_merge_640B": 37.96,
-          "safe_boa_8experts_seqlock": 566.0,
-          "echopool_submit": 30.81,
-          "varopt_k256": 134.0,
-          "online_rls_d16": 118.59,
-          "sift_voi_2048ch_select_and_obs": 25939.77
+          "bet_eprocess": 26.7,
+          "cs_empirical_bernstein": 62.75,
+          "cs_normal_mixture": 26.71,
+          "agent_race_8arms": 97.35,
+          "conformal_5rate_agaci_w128": 350.15,
+          "cmonoid_add": 36.85,
+          "cmonoid_merge_640B": 34.18,
+          "safe_boa_8experts_seqlock": 445.68,
+          "echopool_submit": 26.6,
+          "varopt_k256": 133.13,
+          "online_rls_d16": 114.86,
+          "sift_voi_2048ch_select_and_obs": 26327.96
         },
         "_sink": 2203301.189823
       },
       "c11_native_vs_python": {
         "bet_eprocess": {
-          "c11_ns_per_op": 30.1,
-          "c11_mops": 33.223,
-          "py_baseline_ns_per_op": 2124.93,
-          "speedup_vs_py_x": 70.6
+          "c11_ns_per_op": 26.7,
+          "c11_mops": 37.453,
+          "py_baseline_ns_per_op": 2536.059,
+          "speedup_vs_py_x": 95.0
         },
         "cs_empirical_bernstein": {
-          "c11_ns_per_op": 67.89,
-          "c11_mops": 14.73,
-          "py_baseline_ns_per_op": 2583.005,
-          "speedup_vs_py_x": 38.0
+          "c11_ns_per_op": 62.75,
+          "c11_mops": 15.936,
+          "py_baseline_ns_per_op": 2614.689,
+          "speedup_vs_py_x": 41.7
         },
         "conformal_5rate_agaci_w128": {
-          "c11_ns_per_op": 315.34,
-          "c11_mops": 3.171,
-          "py_baseline_ns_per_op": 86329.515,
-          "speedup_vs_py_x": 273.8
+          "c11_ns_per_op": 350.15,
+          "c11_mops": 2.856,
+          "py_baseline_ns_per_op": 85169.621,
+          "speedup_vs_py_x": 243.2
         },
         "cmonoid_add": {
-          "c11_ns_per_op": 38.78,
-          "c11_mops": 25.786,
-          "py_baseline_ns_per_op": 1.485,
+          "c11_ns_per_op": 36.85,
+          "c11_mops": 27.137,
+          "py_baseline_ns_per_op": 1.531,
           "speedup_vs_py_x": 0.0
         },
         "cmonoid_merge_640B": {
-          "c11_ns_per_op": 37.96,
-          "c11_mops": 26.344,
-          "py_baseline_ns_per_op": 1459.88,
-          "speedup_vs_py_x": 38.5
+          "c11_ns_per_op": 34.18,
+          "c11_mops": 29.257,
+          "py_baseline_ns_per_op": 1608.71,
+          "speedup_vs_py_x": 47.1
         },
         "safe_boa_8experts_seqlock": {
-          "c11_ns_per_op": 566.0,
-          "c11_mops": 1.767,
-          "py_baseline_ns_per_op": 25530.493,
-          "speedup_vs_py_x": 45.1
+          "c11_ns_per_op": 445.68,
+          "c11_mops": 2.244,
+          "py_baseline_ns_per_op": 25832.27,
+          "speedup_vs_py_x": 58.0
         },
         "echopool_submit": {
-          "c11_ns_per_op": 30.81,
-          "c11_mops": 32.457,
-          "py_baseline_ns_per_op": 1571.717,
-          "speedup_vs_py_x": 51.0
+          "c11_ns_per_op": 26.6,
+          "c11_mops": 37.594,
+          "py_baseline_ns_per_op": 1552.762,
+          "speedup_vs_py_x": 58.4
         },
         "varopt_k256": {
-          "c11_ns_per_op": 134.0,
-          "c11_mops": 7.463,
-          "py_baseline_ns_per_op": 2001.637,
-          "speedup_vs_py_x": 14.9
+          "c11_ns_per_op": 133.13,
+          "c11_mops": 7.511,
+          "py_baseline_ns_per_op": 1939.54,
+          "speedup_vs_py_x": 14.6
         },
         "online_rls_d16": {
-          "c11_ns_per_op": 118.59,
-          "c11_mops": 8.432,
-          "py_baseline_ns_per_op": 26176.273,
-          "speedup_vs_py_x": 220.7
+          "c11_ns_per_op": 114.86,
+          "c11_mops": 8.706,
+          "py_baseline_ns_per_op": 23405.815,
+          "speedup_vs_py_x": 203.8
         },
         "sift_voi_2048ch_select_and_obs": {
-          "c11_ns_per_op": 25939.77,
-          "c11_mops": 0.039,
-          "py_baseline_ns_per_op": 2049023.96,
-          "speedup_vs_py_x": 79.0
+          "c11_ns_per_op": 26327.96,
+          "c11_mops": 0.038,
+          "py_baseline_ns_per_op": 2005243.173,
+          "speedup_vs_py_x": 76.2
         }
       }
     },
@@ -660,22 +660,22 @@
       },
       "tree_merge_latency": {
         "runs": 5,
-        "py_raw_median_ms": 11.188,
-        "py_raw_p95_ms": 16.075,
-        "eproc_py_api_median_ms": 0.506,
-        "eproc_py_api_p95_ms": 0.928,
-        "eproc_py_api_speedup_x": 22.1,
+        "py_raw_median_ms": 11.85,
+        "py_raw_p95_ms": 18.252,
+        "eproc_py_api_median_ms": 0.522,
+        "eproc_py_api_p95_ms": 0.868,
+        "eproc_py_api_speedup_x": 22.69,
         "eproc_c11_native_1024_tree": {
           "trials_us": [
-            331.757,
-            68.978,
-            62.785,
-            83.711,
-            74.86
+            312.696,
+            64.327,
+            62.208,
+            61.47,
+            61.52
           ],
-          "median_us": 74.86,
-          "p95_us": 282.148,
-          "ns_per_merge": 73.18
+          "median_us": 62.208,
+          "p95_us": 263.022,
+          "ns_per_merge": 60.81
         }
       },
       "algebraic_exactness": {
@@ -805,7 +805,7 @@
         "f1_mean": 0.0997,
         "loud_false_alarms_mean": 21.4,
         "loud_reads_wasted_mean": 158.4,
-        "epoch_latency_median_ms": 2.12
+        "epoch_latency_median_ms": 2.13
       },
       "uniform_random": {
         "recall_mean": 0.0125,
@@ -813,7 +813,7 @@
         "f1_mean": 0.0236,
         "loud_false_alarms_mean": 4.8,
         "loud_reads_wasted_mean": 32.2,
-        "epoch_latency_median_ms": 0.2
+        "epoch_latency_median_ms": 0.19
       },
       "eproc_sift_voi": {
         "recall_mean": 0.6111,
@@ -821,7 +821,7 @@
         "f1_mean": 0.7522,
         "loud_false_alarms_mean": 0.0,
         "loud_reads_wasted_mean": 0.0,
-        "epoch_latency_median_ms": 25.61
+        "epoch_latency_median_ms": 26.92
       },
       "recall_gain_vs_naive_x": 9.0,
       "loud_false_alarm_reduction_pct": 100.0
@@ -844,19 +844,19 @@
     },
     "T3_raw_kernel_speed": {
       "bar": "< 100 ns E-process, < 400 ns 5-rate AgACI, >= 50x/200x vs pure Python",
-      "measured_eprocess_batch_ns": 27.53,
-      "measured_eprocess_batch_speedup_x": 18.57,
-      "measured_conformal_batch_ns": 316.833,
-      "measured_conformal_batch_speedup_x": 272.98,
-      "measured_c11_eprocess_ns": 30.1,
-      "measured_c11_conformal_ns": 315.34,
+      "measured_eprocess_batch_ns": 27.607,
+      "measured_eprocess_batch_speedup_x": 17.9,
+      "measured_conformal_batch_ns": 353.529,
+      "measured_conformal_batch_speedup_x": 236.73,
+      "measured_c11_eprocess_ns": 26.7,
+      "measured_c11_conformal_ns": 350.15,
       "pass": true
     },
     "T4_distributed_conformal_monoid": {
       "bar": "<= 1,024 B wire struct, 0 integer drift, < 500 us for 1,024 merges",
       "measured_wire_bytes": 640,
       "measured_integer_bin_drift": 0,
-      "measured_1024_merge_us": 74.86,
+      "measured_1024_merge_us": 62.21,
       "pass": true
     },
     "T5_multi_agent_safe_fusion": {
@@ -870,7 +870,7 @@
     },
     "T6_cold_import_budget": {
       "bar": "< 20 ms Python cold import",
-      "measured_cold_import_ms": 0.776,
+      "measured_cold_import_ms": 0.888,
       "pass": true
     }
   }

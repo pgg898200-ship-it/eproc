@@ -13,7 +13,9 @@ dist/*.o
 *.egg-info/
 test_c_core
 test_c_core_portable
+test_c_core_scalar
 test_c_core_asan
 test_c_core_tsan
 bench_c_native
 breaker_c_torture
+rust/eproc/target/

@@ -1,9 +1,11 @@
 # eproc — Complete Agent & Developer Reference (`llms-full.txt`)
 
-- **Package:** `eproc` (Apache-2.0, zero runtime dependencies)
-- **Core Runtime:** C11 + AVX2/FMA (`-std=c11 -O3 -ffp-contract=off`), zero hot-path `malloc`/`free`, 0-ULP bit-identical portable scalar fallback, CPython C-API `_native` accelerator (`ctypes` automatic fallback), single-header C11/C++17 `dist/eproc_single.h`.
-- **Cold Import:** `0.78 ms` median (`import eproc` uses PEP 562 lazy exports).
-- **Verification:** 6/6 pre-registered benchmark targets PASS (`benchmarks/receipts.json`), 42/42 independent Adversarial Breaker tests PASS (`tests/test_breaker.py`), 25/25 Python API/CLI/MCP tests PASS on both `_native` and `ctypes`, ASan+UBSan+`float-cast-overflow` PASS, TSan 2,000,000 concurrent seqlock reads PASS (0 torn reads, 0 races).
+- **Repository:** `https://github.com/pgg898200-ship-it/eproc`
+- **Live Browser WASM Lab:** `https://pgg898200-ship-it.github.io/eproc/`
+- **Package / License:** `eproc` `v0.1.0` (Apache-2.0, zero runtime dependencies)
+- **Core Runtime:** C11 (`-std=c11 -O3 -ffp-contract=off`), zero hot-path `malloc`/`free`, automatic runtime CPUID AVX2 dispatch inside portable wheels (`2.56x` faster than scalar with zero `-mavx2` flags), 3-way 0-ULP bit-identity across native AVX2 / portable runtime-AVX2 / pure scalar (`0xc1db7c3924a4bf25`), CPython C-API `_native` (`ctypes` fallback), single-header C11/C++17 (`dist/eproc_single.h`), CMake (`eproc::eproc`), 72 KiB WebAssembly (`dist/eproc.wasm` + `js/eproc.mjs` + `js/eproc.d.ts`), zero-dep Rust (`rust/eproc/`), and zero-dep Go (`go/eproc/`).
+- **Cold Import:** `0.88 ms` (`import eproc` uses PEP 562 lazy exports).
+- **Verification:** 6/6 pre-registered benchmark targets PASS (`benchmarks/receipts.json`), 42/42 Adversarial Breaker tests PASS, 25/25 Python API + 16/16 Adapter tests PASS on both `_native` and `ctypes`, 13/13 WASM/Node tests PASS (bit-exact 640 B wire parity with C11), 10/10 Rust tests PASS (`-D warnings`), 9/9 Go tests PASS (`-race`), CMake static/shared `ctest` PASS, ASan+UBSan+`float-cast-overflow` PASS, TSan 2M concurrent seqlock reads PASS (`0` torn reads, `0` races).
 
 ---
 
@@ -32,19 +34,36 @@ from eproc import (
     VarOptSampler,       # VarOptSampler(k, seed=42) -> .push/.estimate_sum/.estimate_mean
     OnlineRLSSampler,    # OnlineRLSSampler(d, lambda_reg=1.0, oversample=2.0, min_prob=0.02, seed=42) -> .step
     SiftVOISelector,     # SiftVOISelector(n_sites, per_site=8, signal_mean=1.5, noise_sd=1.0) -> .set_noise_scale/.observe_channel/.observe_site/.select_next
+
+    # Drop-in eval/CI/sklearn/fleet adapters
+    EvalGate,            # EvalGate(mu0, alpha=0.05, lower=0.0, upper=1.0, side="upper", fixed_horizon_n=None)
+    PairedEvalGate,      # PairedEvalGate(alpha=0.05, lower=0.0, upper=1.0, side="upper", fixed_horizon_n=None)
+    ConformalWrapper,    # ConformalWrapper(estimator, alphas=(0.5,0.2,0.1,0.05,0.01)) -> .fit/.partial_fit/.predict_interval
+    assert_eprocess_uplift,  # pytest / CI anytime-valid uplift assertion
+    assert_no_regression,    # pytest / CI anytime-valid regression guard
+    fleet_calibrate,         # 1-line distributed 640-byte merge + exact LOO peer quantiles
 )
 ```
 
 ### Zero-Copy Batch Methods
-- `EProcess.update_batch(xs)` — accepts `array('d')`, `memoryview`, contiguous float64 `numpy.ndarray`, or Python sequences; releases the GIL inside C (`36.3M ops/s`, `27.5 ns/op`).
-- `ConfidenceSequence.update_batch(xs)` — `15.6M ops/s` (`63.9 ns/op`).
+- `EProcess.update_batch(xs)` — accepts `array('d')`, `memoryview`, contiguous float64 `numpy.ndarray`, or Python sequences; releases GIL inside C (`36.2M ops/s`, `27.6 ns/op`).
+- `ConfidenceSequence.update_batch(xs)` — `15.4M ops/s` (`65.0 ns/op`).
 - `AgentRace.update_batch(arms, rewards)` — `uint32` arm buffer + `float64` reward buffer.
-- `MultiRateConformal.update_batch(scores)` — `3.16M ops/s` (`316.8 ns/op`, 5 simultaneous non-crossing rates).
-- `ConformalMonoid.add_batch(scores)` — `25.6M ops/s` (`39.0 ns/op`), fixed `640` bytes wire format.
+- `MultiRateConformal.update_batch(scores)` — `2.83M ops/s` (`353.5 ns/op`, 5 simultaneous non-crossing rates).
+- `ConformalMonoid.add_batch(scores)` — `25.8M ops/s` (`38.7 ns/op`), fixed `640` bytes wire format.
 
 ---
 
-## 2. CLI Commands (`eproc`)
+## 2. Multi-Language Targets (Zero Runtime Dependencies)
+
+- **Single-Header C11 / C++17:** `#define EPROC_IMPLEMENTATION` + `#include "dist/eproc_single.h"` (`-std=c11 -O3 -ffp-contract=off -lm` or `-std=c++17`). CMake `FetchContent` provides `eproc::eproc` and `eproc::single_header`.
+- **WebAssembly / JS / TypeScript (`dist/eproc.wasm`, `js/eproc.mjs`, `js/eproc.d.ts`):** `73,795 bytes` (`72.07 KiB`), 88 exported C11 functions, only 3 JS `Math` imports (`log`, `exp`, `log1p`), zero Emscripten/WASI. Runs in Node.js, browsers, Bun, Deno, and edge workers.
+- **Rust (`rust/eproc/`):** zero Cargo dependencies; compiles `csrc/` via `build.rs` with runtime AVX2; exposes safe `EProcess`, `ConfidenceSequence`, `EDetector`, `AgentRace`, `MultiRateConformal`, `DelayedConformal`, `BudgetConformal`, `ConformalMonoid`, `SafeFuser` + `Send+Sync` `SafeFuserReader`, `EchoPool`, `VarOptSampler`, `OnlineRLSSampler`, `SiftVOISelector`.
+- **Go (`go/eproc/`):** zero external Go modules; self-contained CGo unity build with runtime AVX2 and `-race`-verified lock-free seqlock snapshots.
+
+---
+
+## 3. CLI Commands (`eproc`) & MCP 2026-07-28 Server (`eproc mcp`)
 
 ```bash
 eproc version
@@ -54,35 +73,30 @@ eproc conformal --alphas 0.5,0.2,0.1,0.05,0.01 --window 128 --pid-ki 0.05 [--jso
 eproc fuse --experts 8 --anchor 0 --alpha-deg 0.05 [--json] < preds.jsonl
 eproc subsample --method varopt --k 256 [--json] < items.jsonl
 eproc bench [--quick]
-eproc mcp
+eproc mcp   # JSON-RPC 2.0 stdio server (2025-11-25 & 2026-07-28, server.json)
 ```
 
----
-
-## 3. MCP 2026-07-28 Server Tools (`eproc mcp`)
-
-Zero-dependency JSON-RPC 2.0 over stdio supporting protocol revisions `2025-11-25` and `2026-07-28` (`initialize`, `server/discover`, `ping`, `tools/list` with `ttlMs=300000` & `cacheScope="public"`, `tools/call`). All stateful tools accept optional `session_id` (LRU-bounded) and strict boolean `reset`.
-
-1. `eproc_etest`: Anytime-valid ONS betting e-process (`mu0`, `values`, `alpha`, `lower`, `upper`, `side`, optional `session_id`).
-2. `eproc_confidence_sequence`: Time-uniform Empirical-Bernstein or Normal-Mixture confidence sequence (`values`, `mode`, `alpha`, `lower`, `upper`, `sigma`, `v_opt`, optional `session_id`).
-3. `eproc_race`: Multi-arm best-agent/model early-elimination tournament (`n_arms`, `observations: [{arm, reward}]`, `alpha`, `lower`, `upper`, `margin`, optional `session_id`) returning active arms, winner, and `suggested_next_arm`.
-4. `eproc_conformal`: Multi-rate crossing-free AgACI + Conformal PID calibration (`scores`, `alphas`, `window_size`, `pid_ki`, `point_pred`, `scale`, optional `session_id`).
-5. `eproc_cmonoid_merge`: Distributed 640-byte `ConformalMonoid` construction, merge, exact Leave-One-Out subtraction, and quantile queries over base64 wire payloads (`op: build|merge|subtract|quantile`).
-6. `eproc_safe_fuse`: Byzantine-safe Scale-Free BOA + 3-gate Ville non-inferiority fusion (`n_experts`, `anchor_idx`, `expert_preds`, `y_true`, `alpha_deg`, optional `session_id`).
-7. `eproc_echopool`: Provenance-deduplicated log-odds belief pooling + Beta-Bernoulli peer reliability (`n_sources`, `n_claims`, `submissions`, `resolutions`, optional `session_id`).
+MCP Tools (`session_id` stateful streaming + strict boolean `reset`):
+1. `eproc_etest` — Anytime-valid ONS betting e-process.
+2. `eproc_confidence_sequence` — Empirical-Bernstein or Normal-Mixture CS.
+3. `eproc_race` — Multi-arm best-agent/model early-elimination tournament.
+4. `eproc_conformal` — 5-rate crossing-free AgACI + Conformal PID.
+5. `eproc_cmonoid_merge` — 640-byte distributed monoid build/merge/LOO-subtract/quantile.
+6. `eproc_safe_fuse` — Byzantine-safe Fixed-Share BOA + 3-gate Ville non-inferiority.
+7. `eproc_echopool` — Provenance-deduplicated log-odds pooling + Beta-Bernoulli peer trust.
 
 ---
 
-## 4. Verified Performance & Safety Summary (`[LIVE-CPU]`, `benchmarks/receipts.json`)
+## 4. Verified Performance & Comparison Summary (`[LIVE-CPU]`, `benchmarks/receipts.json`, `docs/COMPARISON.md`)
 
 - **Peeking Null FPR (`N=2,000, T=1,000, alpha=0.05`):** `eproc.EProcess` = **`3.90%`** (Beta(0.5, 4.5) = **`4.00%`**) vs continuous Student-t peeking = **`39.20%`** (**10.1× reduction**).
-- **Eval Token Savings:** Direct stopping at `+0.15` uplift = **88 median calls** vs `857` fixed (**9.74× faster, 88.7% saved**, `100%` power). `K=8` tournament = **3,994 median calls** vs `6,400` fixed (**36.1% mean saved, 0.00% wrong winners, 0.00% null FWER**).
+- **Eval Token Savings:** Direct stopping at `+0.15` uplift = **88 median calls** vs `857` fixed (**9.74× faster, 88.7% saved**, `100%` power). `K=8` tournament = **3,994 median calls** vs `6,400` fixed (**36.1% mean saved, 0.00% null FWER**).
 - **Speed vs Pure-Python Baselines:**
-  - `ConformalMonoid.subtract` (LOO): `267.8 ns` vs `578,975 ns` (**2,161.7× faster**)
-  - `MultiRateConformal` (5-rate batch / C11): `316.8 ns` / `315.3 ns` vs `86,490 ns` (**273.8× faster**)
-  - `OnlineRLSSampler` (`d=16`): `118.6 ns` C11 / `230.1 ns` Py vs `26,176 ns` (**220.7× / 113.8× faster**)
-  - `SiftVOISelector` (`2,048` ch): `11.0 µs` vs `2,049 µs` (**186.2× faster**); 8,192-ch firehose F1 **`0.752`** vs `0.100` naive (`0.0` loud false alarms, `25.6 ms`/epoch)
-  - `EProcess` batch / C11: `27.5 ns` (`36.3M ops/s`) / `30.1 ns` (**70.6× faster** than scalar Python)
-  - `SafeFuser` (8 experts + seqlock): `614.0 ns` Py / `566.0 ns` C11 vs `25,531 ns` (**45.1× faster**); Attack MSE `0.0220` vs `10.42B` naive mean and `0.1951` anchor (**-88.7% vs anchor**); Post-shift MSE `0.0284` vs `0.1898` anchor (**-85.0%**)
-  - `EchoPool`: `30.8 ns` C11 / `205.9 ns` Py (**51.0× / 7.6× faster**); Brier skill `+0.4068` vs `-0.4835` naive vote (`1,000` echoes dropped / `0` double-counted)
-  - `ConformalMonoid` 1,024-agent fleet (`512k` scores): `640 B` wire (**6,400× smaller** than `4.10 MB` raw), `74.9 µs` C11 / `0.51 ms` Py merge (**149× / 22.1× faster**), `0` integer bin drift, `0.09%–0.25%` quantile error at `q50–q90`.
+  - `ConformalMonoid.subtract` (LOO): `285.8 ns` vs `575,835 ns` (**2,015.0× faster**; **332,244×** faster vs raw 256-agent array LOO recomputation)
+  - `MultiRateConformal` (5-rate batch / C11): `353.5 ns` / `350.1 ns` vs `83,691 ns` (**243.2× faster**; **0/2,000** crossing ticks vs `415/2,000` for independent 5-rate ACI)
+  - `OnlineRLSSampler` (`d=16`): `114.9 ns` C11 / `221.3 ns` Py vs `23,406 ns` (**203.8× / 105.8× faster**)
+  - `SiftVOISelector` (`2,048` ch): `12.4 µs` vs `2,005 µs` (**161.4× faster**); 8,192-ch firehose F1 **`0.752`** vs `0.100` naive (`0.0` loud false alarms, `26.9 ms`/epoch)
+  - `EProcess` C11 / Py batch: `26.7 ns` (`37.45M ops/s`) / `27.6 ns` (**95.0× faster** than scalar Python)
+  - `EchoPool`: `26.6 ns` C11 (`37.59M ops/s`) / `201.6 ns` Py (**58.4× / 7.7× faster**); Brier skill `+0.4068` vs `-0.4835` naive vote (`1,000` echoes dropped / `0` double-counted)
+  - `SafeFuser` (8 experts + slim seqlock): `445.7 ns` C11 / `569.9 ns` Py vs `25,832 ns` (**58.0× / 45.3× faster**); Attack+shift MSE **`0.0156`** vs `0.0305` coordinate median (**-48.8%**), `0.1926` anchor (**-91.9%**), and `15.62B` naive mean
+  - `ConformalMonoid` 1,024-agent fleet (`512k` scores): `640 B` wire (**6,400× smaller** than `4.10 MB` raw), `62.2 µs` C11 / `0.52 ms` Py merge (**190× / 22.7× faster**), `0` integer bin drift.

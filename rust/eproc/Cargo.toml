@@ -1,0 +1,15 @@
+[package]
+name = "eproc"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/pgg898200-ship-it/eproc"
+description = "Zero-dependency Rust bindings for eproc: sub-microsecond anytime-valid e-processes, confidence sequences, multi-rate conformal calibration, Byzantine-safe multi-agent fusion, and causal Horvitz-Thompson subsampling."
+readme = "README.md"
+keywords = ["e-process", "conformal", "anytime-valid", "statistics", "subsampling"]
+categories = ["science", "mathematics", "algorithms"]
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]

@@ -29,6 +29,7 @@ CORE_HEADERS = [
     "csrc/eproc.h",
     "csrc/eproc_seqlock.h",
     "csrc/eproc_internal.h",
+    "csrc/eproc_simd.h",
 ]
 
 

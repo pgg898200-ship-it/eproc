@@ -13,6 +13,7 @@ include skills/eproc/SKILL.md
 include csrc/eproc.h
 include csrc/eproc_seqlock.h
 include csrc/eproc_internal.h
+include csrc/eproc_simd.h
 include csrc/eproc_eprocess.c
 include csrc/eproc_conformal.c
 include csrc/eproc_fusion.c

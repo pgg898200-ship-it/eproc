@@ -1,0 +1,73 @@
+cff-version: 1.2.0
+title: "eproc: Sub-microsecond anytime-valid online statistical inference, multi-rate conformal calibration, and Byzantine-safe multi-agent fusion"
+message: "If you use eproc in research, benchmarks, or production evaluation pipelines, please cite it using the metadata below."
+type: software
+version: "0.1.0"
+date-released: "2026-11-22"
+license: Apache-2.0
+repository-code: "https://github.com/pgg898200-ship-it/eproc"
+url: "https://pgg898200-ship-it.github.io/eproc/"
+authors:
+  - name: "eproc contributors"
+    website: "https://github.com/pgg898200-ship-it/eproc"
+abstract: >-
+  eproc is a zero-allocation C11/SIMD and zero-dependency Python statistical
+  inference engine providing anytime-valid ONS betting e-processes, O(1)
+  Empirical-Bernstein and Normal-Mixture confidence sequences, multi-arm agent
+  racing, multi-rate crossing-free AgACI + Conformal PID online calibration,
+  fixed 640-byte abelian conformal monoids for distributed leave-one-out fleet
+  calibration, Byzantine-safe multi-agent fusion with lock-free seqlocked
+  weights, provenance-deduplicated belief pooling, causal Horvitz-Thompson
+  subsampling, and an MCP 2026-07-28 stdio server.
+keywords:
+  - e-process
+  - anytime-valid
+  - confidence-sequence
+  - conformal-prediction
+  - sequential-testing
+  - multi-agent
+  - byzantine-fault-tolerance
+  - horvitz-thompson
+  - mcp-server
+  - c11
+references:
+  - type: article
+    title: "Estimating means of bounded random variables by betting"
+    authors:
+      - family-names: "Waudby-Smith"
+        given-names: "Ian"
+      - family-names: "Ramdas"
+        given-names: "Aaditya"
+    journal: "Journal of the Royal Statistical Society Series B: Statistical Methodology"
+    year: 2024
+  - type: article
+    title: "Time-uniform, nonparametric, nonasymptotic confidence sequences"
+    authors:
+      - family-names: "Howard"
+        given-names: "Steven R."
+      - family-names: "Ramdas"
+        given-names: "Aaditya"
+      - family-names: "McAuliffe"
+        given-names: "Jon"
+      - family-names: "Sekhon"
+        given-names: "Jasjeet"
+    journal: "The Annals of Statistics"
+    year: 2021
+  - type: conference-paper
+    title: "Conformal PID Control for Time Series Prediction"
+    authors:
+      - family-names: "Angelopoulos"
+        given-names: "Anastasios N."
+      - family-names: "Candès"
+        given-names: "Emmanuel J."
+      - family-names: "Tibshirani"
+        given-names: "Ryan J."
+    collection-title: "Advances in Neural Information Processing Systems (NeurIPS)"
+    year: 2023
+  - type: article
+    title: "Optimal learning with Bernstein Online Aggregation"
+    authors:
+      - family-names: "Wintenberger"
+        given-names: "Olivier"
+    journal: "Machine Learning"
+    year: 2017

@@ -38,10 +38,25 @@ REQUIRED_FILES = (
     "setup.py",
     "MANIFEST.in",
     "Makefile",
+    "CMakeLists.txt",
+    "eproc.pc.in",
+    "CITATION.cff",
+    "server.json",
+    "SECURITY.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
     "csrc/eproc.h",
     "csrc/eproc_seqlock.h",
+    "csrc/eproc_simd.h",
     "dist/eproc_single.h",
+    "dist/eproc.wasm",
+    "js/eproc.mjs",
+    "js/eproc.d.ts",
+    "js/package.json",
+    "rust/eproc/Cargo.toml",
+    "go/eproc/go.mod",
     "docs/MATHEMATICS.md",
+    "docs/COMPARISON.md",
     "docs/index.html",
     "docs/LAUNCH_CHECKLIST.md",
     "skills/eproc/SKILL.md",
@@ -73,15 +88,20 @@ def check_zero_deps() -> list[str]:
 
 def check_no_leaks() -> list[str]:
     errs: list[str] = []
-    text_exts = {".c", ".h", ".py", ".md", ".txt", ".json", ".toml", ".yml", ".yaml", ".html"}
-    skip_dirs = {".git", "__pycache__", "build", ".pytest_cache"}
+    text_exts = {
+        ".c", ".h", ".py", ".md", ".txt", ".json", ".toml", ".yml", ".yaml",
+        ".html", ".rs", ".go", ".mjs", ".ts", ".cff", ".in", ".mod",
+    }
+    skip_dirs = {".git", "__pycache__", "build", ".pytest_cache", "target"}
     self_path = Path(__file__).resolve()
     for p in sorted(ROOT.rglob("*")):
         if not p.is_file() or p.resolve() == self_path:
             continue
         if any(part in skip_dirs for part in p.parts):
             continue
-        if p.suffix not in text_exts and p.name not in {"Makefile", "LICENSE", "NOTICE", "MANIFEST.in", "SHA256SUMS"}:
+        if p.suffix not in text_exts and p.name not in {
+            "Makefile", "LICENSE", "NOTICE", "MANIFEST.in", "SHA256SUMS", "CMakeLists.txt",
+        }:
             continue
         content = p.read_text(encoding="utf-8", errors="ignore")
         for pat in FORBIDDEN_PATTERNS:
