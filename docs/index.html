@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eproc — Sub-Microsecond Anytime-Valid Statistics, Online Conformal &amp; Byzantine-Safe Multi-Agent Fusion</title>
-  <meta name="description" content="Zero-dependency C11/AVX2 + Python + WebAssembly (72 KiB) + Rust + Go + Single-Header C/C++17 + CLI + MCP 2026-07-28 engine for anytime-valid e-processes, crossing-free online conformal calibration, 640-byte abelian fleet monoids, and Byzantine-safe multi-agent fusion." />
+  <title>eproc · Sequential evaluation lab</title>
+  <meta name="description" content="Test a stream of bounded evaluation scores in your browser. Watch the e-value, confidence sequence and calibrated radii update with the local WebAssembly engine." />
   <style>
     :root {
-      --bg: #ffffff;
-      --surface: #f7f8fa;
+      --bg: #faf8f3;
+      --surface: #fffdfa;
       --fg: #111827;
       --muted: #4b5563;
       --border: #d8dee6;
-      --accent: #2563eb;
+      --accent: #694181;
       --accent-fg: #ffffff;
       --ok: #15803d;
       --warn: #b45309;
@@ -27,8 +27,8 @@
         --fg: #e5e7eb;
         --muted: #9ca3af;
         --border: #263244;
-        --accent: #3b82f6;
-        --accent-fg: #ffffff;
+        --accent: #c7a3e3;
+        --accent-fg: #281b34;
         --ok: #22c55e;
         --warn: #f59e0b;
         --err: #ef4444;
@@ -50,16 +50,17 @@
     code, pre, textarea { font-family: var(--mono); }
     header {
       display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
-      gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--border);
+      gap: 16px; padding: clamp(20px, 4vw, 40px); background: #292138; color: #fff9e9; border-radius: 14px;
     }
+    header a { color: #f5cf80; }
     .title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    h1 { margin: 0; font-size: 1.5rem; letter-spacing: -0.02em; }
+    h1 { margin: 0; font-size: clamp(1.8rem, 4.5vw, 3.1rem); line-height: 1.1; letter-spacing: -0.045em; }
     .badge {
       font-family: var(--mono); font-size: 0.72rem; padding: 2px 9px; border-radius: 999px;
       border: 1px solid var(--border); background: var(--surface); color: var(--muted);
     }
     .badge.ok { color: var(--ok); }
-    .subtitle { margin: 6px 0 0; font-size: 0.9rem; color: var(--muted); max-width: 650px; }
+    .subtitle { margin: 12px 0; font-size: 1rem; color: #e8d5f2; max-width: 690px; }
     .links { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.8rem; font-family: var(--mono); }
     .kpis { display: flex; gap: 8px; flex-wrap: wrap; }
     .kpi {
@@ -171,47 +172,27 @@
     <header>
       <div>
         <div class="title-row">
-          <h1>eproc</h1>
-          <span class="badge">v0.1.0 · C11/Runtime-AVX2 · Apache-2.0</span>
+          <h1>eproc · Sequential evaluation lab</h1>
           <span id="wasm-badge" class="badge">Loading C11 WASM (72 KiB)…</span>
-          <span class="badge ok">6/6 Gates · 42/42 Breaker PASS</span>
         </div>
-        <p class="subtitle">
-          Sub-microsecond anytime-valid statistics, crossing-free multi-rate online conformal calibration,
-          640-byte abelian fleet monoids, and Byzantine-safe multi-agent fusion. Zero runtime dependencies across
-          Python, C11/C++17, WebAssembly/JS/TS, Rust, Go, CLI, and MCP 2026-07-28.
-        </p>
+        <p class="subtitle">Check a stopping rule before you put it in your evaluation loop. Paste bounded scores or run a preset to see when the evidence crosses your threshold. All calculations run in your browser.</p>
         <div class="links">
           <a href="https://github.com/pgg898200-ship-it/eproc">GitHub</a>
-          <a href="COMPARISON.md">COMPARISON.md</a>
-          <a href="MATHEMATICS.md">MATHEMATICS.md</a>
-          <a href="llms.txt">llms.txt</a>
+          <a href="COMPARISON.md">Benchmarks</a>
+          <a href="MATHEMATICS.md">Assumptions</a>
+          <a href="llms.txt">Agent guide</a>
           <a href="llms-full.txt">llms-full.txt</a>
           <a href="eproc_single.h">eproc_single.h</a>
           <a href="eproc.wasm">eproc.wasm</a>
           <a href="SHA256SUMS">SHA256SUMS</a>
         </div>
       </div>
-      <div class="kpis">
-        <div class="kpi">
-          <div class="kpi-label">Cold Import</div>
-          <div class="kpi-val">0.88 ms</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">E-Process C11</div>
-          <div class="kpi-val">26.7 ns</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">WASM Core</div>
-          <div class="kpi-val accent">72 KiB</div>
-        </div>
-      </div>
     </header>
 
     <div class="install-bar">
       <div class="cmd-box">
-        <div><span class="cmd-label">Python (portable wheel + runtime AVX2)</span><code>pip install eproc</code></div>
-        <button class="copy-btn" data-copy="pip install eproc">Copy</button>
+        <div><span class="cmd-label">Python release wheel</span><a href="https://github.com/pgg898200-ship-it/eproc#install">Install eproc 0.1.0</a></div>
+        <button class="copy-btn" aria-label="Copy Python wheel installation command" data-copy="python -m pip install --no-index --only-binary=:all: --find-links https://github.com/pgg898200-ship-it/eproc/releases/expanded_assets/v0.1.0 eproc==0.1.0">Copy</button>
       </div>
       <div class="cmd-box">
         <div><span class="cmd-label">Single-Header C11 / C++17 (0 malloc)</span><code>#include "eproc_single.h"</code></div>
@@ -228,10 +209,10 @@
     </div>
 
     <div class="tabs">
-      <button class="tab-btn active" data-tab="wasm-eval">1. Live C11 WASM Evaluator (Paste Data)</button>
-      <button class="tab-btn" data-tab="peeking">2. Anytime-Valid Peeking Simulator</button>
-      <button class="tab-btn" data-tab="benchmarks">3. Verified [LIVE-CPU] Speedups</button>
-      <button class="tab-btn" data-tab="swarm">4. Byzantine &amp; Echo Swarm Lab</button>
+      <button class="tab-btn active" data-tab="wasm-eval">Score stream</button>
+      <button class="tab-btn" data-tab="peeking">Repeated testing</button>
+      <button class="tab-btn" data-tab="benchmarks">Benchmarks</button>
+      <button class="tab-btn" data-tab="swarm">Forecast fusion</button>
     </div>
 
     <!-- TAB 1: Real Compiled C11 WebAssembly Live Evaluator -->
@@ -239,8 +220,8 @@
       <div class="card">
         <div class="controls">
           <div>
-            <strong>Run the REAL C11 Core Compiled to WebAssembly Right in Your Browser</strong>
-            <div class="stat-sub">100% local execution in <code>eproc.wasm</code> (72 KiB, 0 server calls, bit-exact 640-byte wire compatibility with native C11/Python/Rust/Go).</div>
+            <strong>Evaluate a stream of scores</strong>
+            <div class="stat-sub">For the upper-tail test, the null bounds the expected next score given the history. Set the score bounds, threshold and error level before collecting data.</div>
           </div>
           <div style="display:flex; flex-wrap:wrap; gap:6px;">
             <button class="sec-btn" id="preset-null">Preset: Null (p=0.50)</button>
@@ -266,7 +247,7 @@
           <button id="w-run" class="primary-btn">Run C11 WASM Engine</button>
         </div>
 
-        <textarea id="w-input" placeholder="Paste comma-, space-, or newline-separated numeric observations (e.g. eval scores 0/1 or continuous residuals)..."></textarea>
+        <textarea aria-label="Observed scores" id="w-input" placeholder="Paste comma-, space-, or newline-separated numeric observations (e.g. eval scores 0/1 or continuous residuals)..."></textarea>
 
         <div class="grid-4" style="margin-top:12px;">
           <div class="stat-box">
@@ -275,9 +256,9 @@
             <div id="w-eval-sub" class="stat-sub">e-value / anytime p</div>
           </div>
           <div class="stat-box">
-            <div class="stat-title">Always-Valid 95% EB-CS</div>
+            <div class="stat-title">Confidence sequence</div>
             <div id="w-cs" class="stat-num">—</div>
-            <div id="w-cs-sub" class="stat-sub">Empirical-Bernstein CS</div>
+            <div id="w-cs-sub" class="stat-sub">Empirical-Bernstein interval</div>
           </div>
           <div class="stat-box">
             <div class="stat-title">Conformal 90% / 95% Radii</div>
@@ -318,24 +299,24 @@
 
         <div class="grid-4">
           <div class="stat-box">
-            <div class="stat-title">Naive Student-t Reject Rate</div>
+            <div class="stat-title">Repeated z-test rejection rate</div>
             <div id="stat-naive-rate" class="stat-num c-err">—</div>
             <div id="stat-naive-note" class="stat-sub">Continuous peeking</div>
           </div>
           <div class="stat-box">
-            <div class="stat-title">eproc ONS E-Process Rate</div>
+            <div class="stat-title">E-process rejection rate</div>
             <div id="stat-eproc-rate" class="stat-num c-ok">—</div>
-            <div id="stat-eproc-note" class="stat-sub">Ville guaranteed</div>
+            <div id="stat-eproc-note" class="stat-sub">Across 200 simulated streams</div>
           </div>
           <div class="stat-box">
-            <div class="stat-title">Median Stop Tick (eproc)</div>
+            <div class="stat-title">Median evaluations used</div>
             <div id="stat-stop-tick" class="stat-num">—</div>
-            <div class="stat-sub">vs fixed N=857</div>
+            <div class="stat-sub">Up to 600 per stream</div>
           </div>
           <div class="stat-box">
-            <div class="stat-title">Eval Tokens Saved</div>
+            <div class="stat-title">Mean evaluations saved</div>
             <div id="stat-tokens-saved" class="stat-num c-accent">—</div>
-            <div class="stat-sub">Early certified stop</div>
+            <div class="stat-sub">Relative to 600 calls per stream</div>
           </div>
         </div>
 
@@ -528,7 +509,10 @@
 
       if (csRes) {
         document.getElementById('w-cs').textContent = `[${csRes.low.toFixed(3)}, ${csRes.high.toFixed(3)}]`;
-        document.getElementById('w-cs-sub').textContent = `mean=${csRes.mean.toFixed(4)} · width=${csRes.width.toFixed(4)}`;
+        document.getElementById('w-cs-sub').textContent = `${((1-alpha)*100).toFixed(1)}% · mean=${csRes.mean.toFixed(4)} · width=${csRes.width.toFixed(4)}`;
+      } else {
+        document.getElementById('w-cs').textContent = '—';
+        document.getElementById('w-cs-sub').textContent = 'Check bounds and error level.';
       }
 
       document.getElementById('w-cp').textContent = `${cpMeta.quantiles[2].toFixed(3)} / ${cpMeta.quantiles[3].toFixed(3)}`;
@@ -574,7 +558,7 @@ ConformalMonoid (fixed ${wire.length} bytes wire payload, bit-exact across C11/P
         document.getElementById('w-lo').value = '0.0';
         document.getElementById('w-hi').value = '1.0';
         document.getElementById('w-side').value = 'upper';
-        for (let i = 0; i < 150; i++) arr.push(rng() < 0.66 ? 1 : 0);
+        for (let i = 0; i < 150; i++) arr.push(rng() < 0.65 ? 1 : 0);
       } else {
         document.getElementById('w-mu0').value = '1.0';
         document.getElementById('w-lo').value = '0.0';
@@ -661,23 +645,20 @@ ConformalMonoid (fixed ${wire.length} bytes wire payload, bit-exact across C11/P
           if (trace) trace.push(Math.max(-3.0, Math.min(logThresh + 2.5, logE)));
         }
         if (nHit) naiveRej++;
-        if (eHit) { eprocRej++; stopTicks.push(eTick); }
+        if (eHit) eprocRej++;
+        stopTicks.push(eTick);
         if (trace) paths.push({ trace, rejected: eHit });
       }
       document.getElementById('stat-naive-rate').textContent = (100 * naiveRej / N_TRIALS).toFixed(1) + '%';
       document.getElementById('stat-eproc-rate').textContent = (100 * eprocRej / N_TRIALS).toFixed(1) + '%';
-      document.getElementById('stat-naive-note').textContent = delta === 0 ? 'False positives (broken!)' : 'Power (invalid under null)';
-      document.getElementById('stat-eproc-note').textContent = delta === 0 ? `Target ≤ ${(alpha*100).toFixed(0)}% exact` : 'Valid power (0 p-hacking)';
-      if (stopTicks.length > 0 && delta > 0) {
-        stopTicks.sort((a, b) => a - b);
-        const med = stopTicks[Math.floor(stopTicks.length / 2)];
-        const saved = Math.max(0, 100 * (1 - med / 857));
-        document.getElementById('stat-stop-tick').textContent = `${med} ticks`;
-        document.getElementById('stat-tokens-saved').textContent = `${saved.toFixed(1)}%`;
-      } else {
-        document.getElementById('stat-stop-tick').textContent = delta === 0 ? 'No false stop' : '> 600';
-        document.getElementById('stat-tokens-saved').textContent = delta === 0 ? 'Safe under H0' : '—';
-      }
+      document.getElementById('stat-naive-note').textContent = delta === 0 ? 'Observed false-positive rate' : 'Observed rejection rate at this effect';
+      document.getElementById('stat-eproc-note').textContent = delta === 0 ? `Nominal error level ${(alpha*100).toFixed(0)}%` : 'Observed rejection rate at this effect';
+      stopTicks.sort((a, b) => a - b);
+      const mid = Math.floor(stopTicks.length / 2);
+      const median = (stopTicks[mid - 1] + stopTicks[mid]) / 2;
+      const mean = stopTicks.reduce((sum, tick) => sum + tick, 0) / N_TRIALS;
+      document.getElementById('stat-stop-tick').textContent = median.toString();
+      document.getElementById('stat-tokens-saved').textContent = `${(100 * (1 - mean / T)).toFixed(1)}%`;
       lastPeekPaths = paths;
       lastPeekThresh = logThresh;
       drawPeeking();
