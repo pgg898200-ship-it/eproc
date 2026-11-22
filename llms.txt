@@ -15,7 +15,7 @@ The [runnable stopping rule](https://github.com/pgg898200-ship-it/eproc#run-a-st
 ## Choose an interface
 
 - [CLI and Python integration examples](https://github.com/pgg898200-ship-it/eproc#integration-examples). `eproc gate --field score --mu0 0.5 --alpha 0.05 --side upper --stop-early --json` reads a stream of JSON objects with a numeric score field. Inspect `rejected`, `rejected_at`, `e_value` and `n` in the JSON result.
-- [MCP tools](https://github.com/pgg898200-ship-it/eproc/blob/main/server.json). Start the installed stdio server with `eproc mcp`.
+- [Connect an MCP client](https://github.com/pgg898200-ship-it/eproc#connect-an-mcp-client). Set the stdio command to the Python interpreter where the release wheel is installed, with args `["-m", "eproc", "mcp"]`.
 - [Full API reference](https://github.com/pgg898200-ship-it/eproc/blob/main/llms-full.txt). Includes `PairedEvalGate` for paired observations, `ConfidenceSequence` for intervals, `AgentRace` for multi-arm comparisons, and online conformal, forecast fusion and subsampling APIs.
 - [Single-header C and C++](https://github.com/pgg898200-ship-it/eproc/blob/main/dist/eproc_single.h), [Rust](https://github.com/pgg898200-ship-it/eproc/tree/main/rust/eproc) and [Go](https://github.com/pgg898200-ship-it/eproc/tree/main/go/eproc).
 - [Local WebAssembly demo](https://pgg898200-ship-it.github.io/eproc/) and [JavaScript bindings](https://github.com/pgg898200-ship-it/eproc/tree/main/js).
