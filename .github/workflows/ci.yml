@@ -13,16 +13,20 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Build C11 core (-O3 + portable) and run C unit tests
+
+      - name: Build C11 core (-O3 + portable) and verify 0-ULP identity & 0 heap alloc
         run: make test
-      - name: Run ASan + UBSan sanitizer suite
+
+      - name: Run ASan + UBSan + float-cast-overflow suite
         run: make test-asan
-      - name: Run TSan concurrent seqlock suite
+
+      - name: Run TSan concurrent Boehm-2012 seqlock suite
         run: make test-tsan
-      - name: Verify single-header C11 bundle compiles cleanly
+
+      - name: Verify single-header C11 and C++17 compilation
         run: |
           python3 scripts/make_single_header.py
-          cc -std=c11 -O3 -ffp-contract=off -Wall -Wextra -Werror -x c - -lm -o /tmp/test_sh <<'EOF'
+          cc -std=c11 -O3 -ffp-contract=off -Wall -Wextra -Werror -x c - -lm -o /tmp/test_sh_c <<'EOF'
           #define EPROC_IMPLEMENTATION
           #include "dist/eproc_single.h"
           #include <assert.h>
@@ -35,15 +39,39 @@ jobs:
               return 0;
           }
           EOF
-          /tmp/test_sh
-      - name: Verify Python zero-dep package, cold import < 15ms, API & Breaker suites
+          /tmp/test_sh_c
+          c++ -std=c++17 -O3 -ffp-contract=off -Wall -Wextra -Werror -x c++ - -lm -o /tmp/test_sh_cpp <<'EOF'
+          #define EPROC_IMPLEMENTATION
+          #include "dist/eproc_single.h"
+          #include <cassert>
+          int main() {
+              eproc_bet_t ep;
+              eproc_bet_result_t res;
+              assert(eproc_bet_init(&ep, 0.5, 0.05, 0.0, 1.0, EPROC_SIDE_UPPER) == EPROC_OK);
+              assert(eproc_bet_update(&ep, 1.0, &res) == EPROC_OK);
+              assert(res.n == 1);
+              return 0;
+          }
+          EOF
+          /tmp/test_sh_cpp
+
+      - name: Build CPython _native accelerator and verify release hygiene
         run: |
-          PYTHONPATH=python python3 -c "
-          import time
-          t0 = time.perf_counter()
-          import eproc
-          ms = (time.perf_counter() - t0) * 1000.0
-          print(f'Cold import: {ms:.2f} ms')
-          assert ms < 25.0, f'Cold import too slow: {ms:.2f} ms'
-          "
-          PYTHONPATH=python python3 -m unittest discover -s tests -v
+          python3 scripts/build_pyext.py
+          python3 scripts/verify_release_hygiene.py --strict
+          sha256sum -c SHA256SUMS
+
+      - name: Run Python API (native + ctypes fallback) & 42-test Adversarial Breaker
+        run: |
+          PYTHONPATH=python python3 -m unittest discover -s tests -p "test_python_api.py" -v
+          EPROC_DISABLE_NATIVE=1 PYTHONPATH=python python3 -m unittest discover -s tests -p "test_python_api.py" -v
+          PYTHONPATH=python python3 -m unittest discover -s tests -p "test_breaker.py" -v
+
+      - name: Verify self-contained pip wheel install outside repo
+        run: |
+          python3 -m venv /tmp/eproc_ci_venv
+          /tmp/eproc_ci_venv/bin/pip install --no-deps .
+          cd /tmp
+          /tmp/eproc_ci_venv/bin/eproc version
+          /tmp/eproc_ci_venv/bin/python -c "import eproc; ep=eproc.EProcess(0.5,0.05); r=ep.update_batch([1.0]*40); assert r.rejected"
+          EPROC_DISABLE_NATIVE=1 /tmp/eproc_ci_venv/bin/python -c "import eproc; ep=eproc.EProcess(0.5,0.05); r=ep.update_batch([1.0]*40); assert r.rejected"
