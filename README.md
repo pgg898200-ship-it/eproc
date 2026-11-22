@@ -86,17 +86,19 @@ ep.free();
 - **Rust ([`rust/eproc/`](rust/eproc/)):** `cargo test --manifest-path rust/eproc/Cargo.toml --release` — compiles `csrc/` via `build.rs` with zero external crates and runtime AVX2.
 - **Go ([`go/eproc/`](go/eproc/)):** `cd go/eproc && go test -race -v ./...` — self-contained CGo unity build with zero external modules and runtime AVX2.
 
-### Coding Agents (MCP 2026-07-28 Server + Agent Skill)
+### Connect an MCP client
 
-```bash
-eproc mcp   # Zero-dependency stdio MCP server (2025-11-25 & 2026-07-28, 7 stateful tools)
+[Install the release wheel](#python) in the Python environment you want the client to use. Run this in that environment to get the absolute path of its interpreter.
+
+```sh
+python -c "import sys; print(sys.executable)"
 ```
 
-Drop-in manifests included for:
-- **MCP Registry:** [`server.json`](server.json)
-- **Claude Code:** [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) + [`skills/eproc/SKILL.md`](skills/eproc/SKILL.md)
-- **Gemini CLI:** [`gemini-extension.json`](gemini-extension.json) + [`skills/eproc/SKILL.md`](skills/eproc/SKILL.md)
-- **Codex / Cursor / Generic MCP Hosts:** `eproc mcp` (`eproc_etest`, `eproc_confidence_sequence`, `eproc_race`, `eproc_conformal`, `eproc_cmonoid_merge`, `eproc_safe_fuse`, `eproc_echopool`).
+Set the client's stdio command to that path with arguments `["-m", "eproc", "mcp"]`. On startup, `tools/list` returns seven tools including `eproc_etest` for a bounded-score test. If the environment is already on the client's PATH, `eproc mcp` starts the same server.
+
+[Claude Code configuration](.claude-plugin/plugin.json) · [Gemini CLI configuration](gemini-extension.json) · [Agent skill](skills/eproc/SKILL.md)
+
+The [registry manifest](server.json) describes a planned PyPI distribution. The v0.1.0 wheels are published on [GitHub Releases](https://github.com/pgg898200-ship-it/eproc/releases/tag/v0.1.0).
 
 ---
 
@@ -242,7 +244,7 @@ python3 scripts/verify_release_hygiene.py --strict && sha256sum -c SHA256SUMS
 - [`benchmarks/BENCHMARKS.md`](benchmarks/BENCHMARKS.md) & [`benchmarks/receipts.json`](benchmarks/receipts.json) — Reproducible live benchmark report and raw JSON receipts.
 - [`BREAKER_REPORT.md`](BREAKER_REPORT.md) — Independent 42-test adversarial red-team audit and resolution log.
 - [`llms.txt`](llms.txt) & [`llms-full.txt`](llms-full.txt) — Machine-readable Markdown reference for AI coding agents.
-- [`skills/eproc/SKILL.md`](skills/eproc/SKILL.md) & [`server.json`](server.json) — Drop-in Agent Skill & MCP Registry manifest.
+- [`skills/eproc/SKILL.md`](skills/eproc/SKILL.md) & [`server.json`](server.json) — Agent skill and proposed PyPI registry metadata.
 - [`SHA256SUMS`](SHA256SUMS), [`SECURITY.md`](SECURITY.md), [`CONTRIBUTING.md`](CONTRIBUTING.md), [`CITATION.cff`](CITATION.cff), [`CHANGELOG.md`](CHANGELOG.md).
 
 ## License
